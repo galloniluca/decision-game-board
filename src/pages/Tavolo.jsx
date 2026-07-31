@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
 
@@ -16,51 +16,68 @@ function Tavolo() {
   const [inviata, setInviata] = useState(null)
   const [invioStato, setInvioStato] = useState('inattivo')
 
+  // Nome tavolo: caricato una volta. Sessione: agganciata in tempo reale.
   useEffect(() => {
-    caricaDati()
-  }, [id])
-
-  async function caricaDati() {
+    let annullato = false
     setCaricamento(true)
     setErrore(null)
 
-    try {
-      const tavoloSnap = await getDoc(doc(db, 'tavoli', id))
-      if (!tavoloSnap.exists()) {
-        setErrore(`Tavolo "${id}" non trovato.`)
+    getDoc(doc(db, 'tavoli', id))
+      .then((snap) => {
+        if (annullato) return
+        if (!snap.exists()) {
+          setErrore(`Tavolo "${id}" non trovato.`)
+          setCaricamento(false)
+          return
+        }
+        setTavolo(snap.data())
+      })
+      .catch((err) => !annullato && setErrore(err.message))
+
+    const unsubSessione = onSnapshot(
+      doc(db, 'sessione', 'corrente'),
+      (snap) => {
+        setSessione(snap.data())
         setCaricamento(false)
-        return
-      }
-      setTavolo(tavoloSnap.data())
+      },
+      (err) => setErrore(err.message)
+    )
 
-      const sessioneSnap = await getDoc(doc(db, 'sessione', 'corrente'))
-      const sessioneData = sessioneSnap.data()
-      setSessione(sessioneData)
-
-      const round = sessioneData.round_attivo
-      const opzioniSnap = await Promise.all(
-        LETTERE.map((lettera) => getDoc(doc(db, 'opzioni', idOpzione(round, lettera))))
-      )
-      setOpzioniRound(opzioniSnap.map((s) => s.data()))
-
-      const sceltaSnap = await getDoc(doc(db, 'scelte', idScelta(id, round)))
-      if (sceltaSnap.exists()) {
-        setInviata(sceltaSnap.data().opzione)
-        setSelezionata(sceltaSnap.data().opzione)
-      } else {
-        setInviata(null)
-        setSelezionata(null)
-      }
-      setInvioStato('inattivo')
-    } catch (err) {
-      setErrore(err.message)
+    return () => {
+      annullato = true
+      unsubSessione()
     }
+  }, [id])
 
-    setCaricamento(false)
-  }
+  // Quando cambia il round attivo: opzioni caricate una volta, propria scelta agganciata in tempo reale.
+  useEffect(() => {
+    if (!sessione) return
+    const round = sessione.round_attivo
+
+    Promise.all(LETTERE.map((lettera) => getDoc(doc(db, 'opzioni', idOpzione(round, lettera)))))
+      .then((snaps) => setOpzioniRound(snaps.map((s) => s.data())))
+      .catch((err) => setErrore(err.message))
+
+    const unsubScelta = onSnapshot(
+      doc(db, 'scelte', idScelta(id, round)),
+      (snap) => {
+        if (snap.exists()) {
+          setInviata(snap.data().opzione)
+          setSelezionata(snap.data().opzione)
+        } else {
+          setInviata(null)
+          setSelezionata(null)
+        }
+        setInvioStato('inattivo')
+      },
+      (err) => setErrore(err.message)
+    )
+
+    return () => unsubScelta()
+  }, [id, sessione?.round_attivo])
 
   async function inviaScelta() {
-    if (!selezionata) return
+    if (!selezionata || !sessione) return
     setInvioStato('invio')
     setErrore(null)
 
@@ -71,8 +88,6 @@ function Tavolo() {
         opzione: selezionata,
         inviato_at: serverTimestamp(),
       })
-      setInviata(selezionata)
-      setInvioStato('inviato')
     } catch (err) {
       setErrore(err.message)
       setInvioStato('errore')
@@ -144,14 +159,6 @@ function Tavolo() {
           >
             {invioStato === 'invio' ? 'Invio in corso...' : 'Invia scelta'}
           </button>
-
-          {invioStato === 'inviato' && <p>✅ Scelta inviata.</p>}
-
-          <p>
-            <button type="button" onClick={caricaDati}>
-              Ricarica
-            </button>
-          </p>
         </>
       )}
     </div>

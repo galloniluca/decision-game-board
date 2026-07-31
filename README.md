@@ -114,7 +114,21 @@ si testa dall'app.
 6. Premi "Avanza al Round 2": il titolo passa a "Round 2 — Chiuso", pronto per essere riaperto
 7. Ripeti fino al Round 4; a Round 4 chiuso compare il messaggio di fine partita
 
-### Prossimo step
+## Step 5 — Realtime
 
-Step 5 — Realtime: collegare gli aggiornamenti in tempo reale di Firestore così regia e tavoli si
-aggiornano da soli, senza dover premere "Aggiorna"/ricaricare. In attesa di conferma prima di procedere.
+Cosa c'è in questo step:
+- `/regia`: sessione (round/stato) e scelte del round attivo agganciate con `onSnapshot` — la board si
+  aggiorna da sola quando un tavolo invia, senza pulsante "Aggiorna" (rimosso, non serve più)
+- `/tavolo/:id`: sessione agganciata con `onSnapshot` — il tavolo vede l'apertura/chiusura round in
+  automatico; anche la propria scelta è agganciata in tempo reale (utile ad es. dopo un "Reset partita")
+- Nomi tavoli e matrice opzioni restano caricati una tantum (non cambiano durante l'evento)
+
+### Come testare
+
+1. Apri `/regia` in una scheda e `/tavolo/1` in un'altra (stesso browser o dispositivi diversi)
+2. Su `/regia` premi "Apri Round 1": su `/tavolo/1`, **senza ricaricare**, dovrebbe apparire subito
+   "Round 1" e le opzioni
+3. Su `/tavolo/1` invia una scelta: su `/regia`, **senza ricaricare**, il tavolo deve comparire ✅ e il
+   contatore aggiornarsi
+4. Su `/regia` premi "Chiudi Round 1": su `/tavolo/1` deve tornare subito il messaggio di attesa
+

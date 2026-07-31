@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { idScelta } from '../lib/costanti'
 
 function Regia() {
   const [caricamento, setCaricamento] = useState(true)
@@ -12,40 +20,48 @@ function Regia() {
   const [tavoli, setTavoli] = useState([])
   const [inviatiPerTavolo, setInviatiPerTavolo] = useState({})
 
+  // Tavoli: caricati una volta (i nomi non cambiano durante l'evento).
   useEffect(() => {
-    caricaDati()
+    getDocs(collection(db, 'tavoli'))
+      .then((snap) => {
+        const lista = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => Number(a.id) - Number(b.id))
+        setTavoli(lista)
+      })
+      .catch((err) => setErrore(err.message))
   }, [])
 
-  async function caricaDati() {
-    setCaricamento(true)
-    setErrore(null)
+  // Sessione agganciata in tempo reale.
+  useEffect(() => {
+    const unsub = onSnapshot(
+      doc(db, 'sessione', 'corrente'),
+      (snap) => {
+        setSessione(snap.data())
+        setCaricamento(false)
+      },
+      (err) => setErrore(err.message)
+    )
+    return () => unsub()
+  }, [])
 
-    try {
-      const sessioneSnap = await getDoc(doc(db, 'sessione', 'corrente'))
-      const sessioneData = sessioneSnap.data()
-      setSessione(sessioneData)
-
-      const tavoliSnap = await getDocs(collection(db, 'tavoli'))
-      const listaTavoli = tavoliSnap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => Number(a.id) - Number(b.id))
-      setTavoli(listaTavoli)
-
-      const round = sessioneData.round_attivo
-      const inviati = {}
-      await Promise.all(
-        listaTavoli.map(async (tavolo) => {
-          const sceltaSnap = await getDoc(doc(db, 'scelte', idScelta(tavolo.id, round)))
-          inviati[tavolo.id] = sceltaSnap.exists()
+  // Scelte del round attivo agganciate in tempo reale.
+  useEffect(() => {
+    if (!sessione) return
+    const q = query(collection(db, 'scelte'), where('round', '==', sessione.round_attivo))
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const inviati = {}
+        snap.forEach((d) => {
+          inviati[d.data().tavolo_id] = true
         })
-      )
-      setInviatiPerTavolo(inviati)
-    } catch (err) {
-      setErrore(err.message)
-    }
-
-    setCaricamento(false)
-  }
+        setInviatiPerTavolo(inviati)
+      },
+      (err) => setErrore(err.message)
+    )
+    return () => unsub()
+  }, [sessione?.round_attivo])
 
   async function apriRound() {
     setAzioneInCorso(true)
@@ -54,7 +70,6 @@ function Regia() {
         stato: 'aperto',
         timer_avvio: serverTimestamp(),
       })
-      await caricaDati()
     } catch (err) {
       setErrore(err.message)
     }
@@ -65,7 +80,6 @@ function Regia() {
     setAzioneInCorso(true)
     try {
       await updateDoc(doc(db, 'sessione', 'corrente'), { stato: 'chiuso' })
-      await caricaDati()
     } catch (err) {
       setErrore(err.message)
     }
@@ -79,7 +93,6 @@ function Regia() {
         round_attivo: sessione.round_attivo + 1,
         stato: 'chiuso',
       })
-      await caricaDati()
     } catch (err) {
       setErrore(err.message)
     }
@@ -88,7 +101,7 @@ function Regia() {
 
   if (caricamento) return <p style={{ padding: '2rem' }}>Caricamento...</p>
 
-  const numInviati = Object.values(inviatiPerTavolo).filter(Boolean).length
+  const numInviati = Object.keys(inviatiPerTavolo).length
   const round = sessione.round_attivo
   const aperto = sessione.stato === 'aperto'
 
@@ -121,9 +134,6 @@ function Regia() {
             Avanza al Round {round + 1}
           </button>
         )}
-        <button type="button" onClick={caricaDati} disabled={azioneInCorso}>
-          Aggiorna
-        </button>
       </div>
 
       {!aperto && round === 4 && (
@@ -142,8 +152,7 @@ function Regia() {
       </ul>
 
       <p style={{ color: '#666' }}>
-        Nessun aggiornamento automatico ancora: premi "Aggiorna" per vedere gli invii più recenti
-        (il realtime arriva allo Step 5).
+        Aggiornamento in tempo reale: non serve ricaricare la pagina.
       </p>
     </div>
   )
