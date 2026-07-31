@@ -53,6 +53,8 @@ function Home() {
 
       <p>
         <Link to="/config">Vai alla Config →</Link>
+        {' · '}
+        <Link to="/regia">Vai alla Regia →</Link>
       </p>
 
       <p>Tavoli (test rapido):</p>

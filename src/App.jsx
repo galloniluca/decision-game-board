@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Config from './pages/Config'
 import Tavolo from './pages/Tavolo'
+import Regia from './pages/Regia'
 import { assicuraDatiIniziali } from './lib/seed'
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/config" element={<Config />} />
       <Route path="/tavolo/:id" element={<Tavolo />} />
+      <Route path="/regia" element={<Regia />} />
     </Routes>
   )
 }

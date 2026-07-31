@@ -88,7 +88,33 @@ Dato che la vista Regia (Step 4) non esiste ancora, per aprire un round bisogna 
 7. Prova anche a cambiare scelta e reinviare: il documento `1_1` deve aggiornarsi, non duplicarsi
 8. Rimetti `stato` su `chiuso` quando hai finito (o usa "Reset partita" da `/config`)
 
+## Step 4 — Vista Regia, statica
+
+Cosa c'è in questo step:
+- Route `/regia` (`src/pages/Regia.jsx`), linkata anche dalla Home
+- Mostra round attivo e stato (aperto/chiuso)
+- Pulsante "Apri Round N" (stato → aperto) / "Chiudi Round N" (stato → chiuso)
+- Pulsante "Avanza al Round N+1" (visibile solo a round chiuso e se N < 4)
+- Elenco tavoli con ✅/⬜ se hanno inviato la scelta nel round attivo (senza mostrare quale opzione,
+  dato che questo schermo può essere proiettato)
+- Contatore "X su 6 tavoli hanno inviato"
+- Nessun realtime ancora: pulsante "Aggiorna" per ricaricare manualmente (arriva allo Step 5)
+
+Con questo step non serve più aprire i round a mano da Firebase Console: tutto il flusso di un round
+si testa dall'app.
+
+### Come testare
+
+1. Apri `/regia` (link dalla Home)
+2. Premi "Apri Round 1": lo stato deve passare ad "Aperto"
+3. In un'altra scheda/dispositivo apri `/tavolo/1`, `/tavolo/2` ecc. e invia una scelta per un paio di tavoli
+4. Torna su `/regia` e premi "Aggiorna": dovresti vedere i tavoli che hanno inviato marcati ✅ e il contatore aggiornato
+5. Premi "Chiudi Round 1": lo stato passa a "Chiuso" — su `/tavolo/:id` (dopo ricarica) dovrebbe sparire
+   la possibilità di inviare e comparire "in attesa che la regia apra il Round 1"
+6. Premi "Avanza al Round 2": il titolo passa a "Round 2 — Chiuso", pronto per essere riaperto
+7. Ripeti fino al Round 4; a Round 4 chiuso compare il messaggio di fine partita
+
 ### Prossimo step
 
-Step 4 — Vista Regia, statica: pannello con round corrente, elenco scelte arrivate, pulsanti apri/chiudi
-round (così non serve più aprire i round a mano da Firebase Console). In attesa di conferma prima di procedere.
+Step 5 — Realtime: collegare gli aggiornamenti in tempo reale di Firestore così regia e tavoli si
+aggiornano da soli, senza dover premere "Aggiorna"/ricaricare. In attesa di conferma prima di procedere.
