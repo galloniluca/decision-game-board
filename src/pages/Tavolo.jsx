@@ -122,8 +122,11 @@ function Tavolo() {
                   style={{
                     padding: '1rem',
                     textAlign: 'left',
-                    border: selezionataAttiva ? '2px solid #333' : '1px solid #ccc',
-                    background: selezionataAttiva ? '#eee' : '#fff',
+                    borderRadius: 6,
+                    border: selezionataAttiva ? '2px solid #aa3bff' : '1px solid #888',
+                    background: selezionataAttiva ? '#aa3bff' : 'transparent',
+                    color: selezionataAttiva ? '#fff' : 'inherit',
+                    fontWeight: selezionataAttiva ? 'bold' : 'normal',
                     cursor: 'pointer',
                   }}
                 >
