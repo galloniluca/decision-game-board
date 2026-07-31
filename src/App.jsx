@@ -1,57 +1,13 @@
-import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabaseClient'
-
-const TABELLE = ['tavoli', 'opzioni', 'sessione', 'scelte']
+import { Route, Routes } from 'react-router-dom'
+import Home from './pages/Home'
+import Config from './pages/Config'
 
 function App() {
-  const [risultati, setRisultati] = useState(null)
-  const [errore, setErrore] = useState(null)
-
-  useEffect(() => {
-    async function verificaConnessione() {
-      const conteggi = {}
-      for (const tabella of TABELLE) {
-        const { count, error } = await supabase
-          .from(tabella)
-          .select('*', { count: 'exact', head: true })
-
-        if (error) {
-          setErrore(`Errore su tabella "${tabella}": ${error.message}`)
-          return
-        }
-        conteggi[tabella] = count
-      }
-      setRisultati(conteggi)
-    }
-
-    verificaConnessione()
-  }, [])
-
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 480 }}>
-      <h1>Lean Trade-off Game — Setup</h1>
-      <p>Verifica di connessione a Supabase (nessuna UI di gioco ancora).</p>
-
-      {errore && (
-        <p style={{ color: 'crimson' }}>
-          ❌ {errore}
-          <br />
-          Controlla il file <code>.env.local</code> e che lo schema SQL sia stato eseguito.
-        </p>
-      )}
-
-      {!errore && !risultati && <p>Connessione in corso...</p>}
-
-      {risultati && (
-        <ul>
-          {TABELLE.map((tabella) => (
-            <li key={tabella}>
-              ✅ <code>{tabella}</code>: {risultati[tabella]} righe
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/config" element={<Config />} />
+    </Routes>
   )
 }
 

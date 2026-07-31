@@ -48,7 +48,28 @@ Cosa c'è in questo step:
 Nessuna autenticazione: la sicurezza è minima, basata su URL non prevedibili (coerente con l'uso
 in un evento live a bassa criticità).
 
+## Step 2 — Vista Config
+
+Cosa c'è in questo step:
+- Routing con `react-router-dom`: `/` (verifica connessione) e `/config`
+- `/config`: tabella della matrice punteggi (4 round × A/B/C) con nome opzione e i 4 shift
+  Q/S/C/P editabili (select vincolata a -1/0/+1), salvataggio riga per riga
+- `/config`: tabella nomi tavoli editabile, salvataggio riga per riga
+- `/config`: pulsante "Reset partita" (cancella tutte le `scelte` e riporta `sessione` a Round 1/chiuso),
+  con conferma prima di eseguire
+- `public/_redirects` per il fallback SPA su Cloudflare Pages (senza, un refresh su `/config` darebbe 404 in produzione)
+
+### Come testare
+
+1. `npm run dev` (con `.env.local` già configurato dallo Step 1)
+2. Apri `/config`
+3. Modifica il nome di un'opzione e/o i suoi shift Q/S/C/P, premi "Salva" sulla riga: dovresti vedere
+   "salvato" accanto al pulsante. Ricarica la pagina per confermare che il valore sia persistito.
+4. Modifica il nome di un tavolo, "Salva", ricarica per confermare.
+5. Prova "Reset partita" (conferma il popup): verifica che la tabella `scelte` sia vuota e `sessione`
+   torni a `round_attivo=1`, `stato=chiuso` (puoi controllare da Supabase Table Editor).
+
 ### Prossimo step
 
-Step 2 — Vista Config: interfaccia per popolare/modificare la matrice punteggi e i nomi tavoli.
-In attesa di conferma prima di procedere.
+Step 3 — Vista Tavolo, statica: schermata `/tavolo/:id` con round attivo, opzioni A/B/C e invio scelta
+(senza timer/realtime). In attesa di conferma prima di procedere.
