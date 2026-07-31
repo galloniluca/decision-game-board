@@ -191,7 +191,20 @@ riesce a raggiungere né il sito pubblicato né Firebase per policy di rete):
   quando torna: i dati non salvati localmente si perdono, ma tutto quello già inviato resta corretto —
   è il comportamento atteso "se la rete cade si continua su carta" del brief)
 
-Nota a parte: la durata del round (`DURATA_ROUND_SECONDI` in `src/lib/tempo.js`, ora 5 minuti) è un
-valore fisso nel codice — fammi sapere se va bene così o se preferisci poterla cambiare da `/config`
-senza richiedermi un redeploy.
+## Configurabile da `/config` (aggiunto dopo lo Step 8 iniziale)
+
+- **Durata round**: campo "Durata round (minuti)" in cima a `/config` (default 5, salvato in
+  `sessione.durata_round_minuti`) — cambia il countdown su tutti i dispositivi al prossimo round aperto,
+  nessun redeploy necessario
+- **Numero tavoli**: sezione "Tavoli" in `/config` ha ora "Aggiungi tavolo" (crea il prossimo ID libero,
+  es. 7 se esistono 1-6) e "Rimuovi" per riga (con conferma; cancella anche le scelte già inviate da
+  quel tavolo). La Home mostra sempre l'elenco aggiornato dei tavoli esistenti, non più un elenco fisso 1-6
+
+### Come testare
+
+1. Su `/config` cambia "Durata round" a un valore basso (es. 0.2 minuti = 12 secondi) e salva
+2. Apri un round da `/regia`: il countdown deve partire dal nuovo valore, non più da 5:00
+3. Su `/config` premi "Aggiungi tavolo": deve comparire un nuovo tavolo con ID incrementale; verifica
+   che appaia anche nella lista della Home e che generi il suo QR
+4. Premi "Rimuovi" su un tavolo di test: dopo conferma deve sparire da tabella, Home e QR
 

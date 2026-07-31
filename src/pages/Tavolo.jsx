@@ -14,6 +14,7 @@ import {
 import { db } from '../lib/firebaseClient'
 import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
 import { calcolaKpiTavolo } from '../lib/kpi'
+import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 
@@ -136,7 +137,10 @@ function Tavolo() {
       ) : (
         <>
           <h2 style={{ marginTop: '1.5rem' }}>Round {round}</h2>
-          <Timer timerAvvio={sessione.timer_avvio} />
+          <Timer
+            timerAvvio={sessione.timer_avvio}
+            durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
+          />
 
           {inviataPerRoundAttivo && (
             <p>

@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 import { formattaMMSS, secondiRimanenti } from '../lib/tempo'
 
-function Timer({ timerAvvio }) {
-  const [rimanenti, setRimanenti] = useState(() => secondiRimanenti(timerAvvio))
+function Timer({ timerAvvio, durataSecondi }) {
+  const [rimanenti, setRimanenti] = useState(() => secondiRimanenti(timerAvvio, durataSecondi))
 
   useEffect(() => {
-    setRimanenti(secondiRimanenti(timerAvvio))
+    setRimanenti(secondiRimanenti(timerAvvio, durataSecondi))
     const interval = setInterval(() => {
-      setRimanenti(secondiRimanenti(timerAvvio))
+      setRimanenti(secondiRimanenti(timerAvvio, durataSecondi))
     }, 1000)
     return () => clearInterval(interval)
-  }, [timerAvvio])
+  }, [timerAvvio, durataSecondi])
 
   if (rimanenti === null) return null
 

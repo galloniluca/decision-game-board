@@ -1,10 +1,10 @@
-export const DURATA_ROUND_SECONDI = 300 // 5 minuti — valore fisso per ora, facile da cambiare qui
+export const DURATA_ROUND_MINUTI_DEFAULT = 5
 
-export function secondiRimanenti(timerAvvio) {
-  if (!timerAvvio) return null
+export function secondiRimanenti(timerAvvio, durataSecondi) {
+  if (!timerAvvio || !durataSecondi) return null
   const inizioMs = timerAvvio.toMillis ? timerAvvio.toMillis() : new Date(timerAvvio).getTime()
   const trascorsi = (Date.now() - inizioMs) / 1000
-  return Math.max(0, Math.round(DURATA_ROUND_SECONDI - trascorsi))
+  return Math.max(0, Math.round(durataSecondi - trascorsi))
 }
 
 export function formattaMMSS(secondi) {

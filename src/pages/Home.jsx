@@ -8,6 +8,7 @@ const COLLEZIONI = ['tavoli', 'opzioni', 'sessione', 'scelte']
 function Home() {
   const [risultati, setRisultati] = useState(null)
   const [errore, setErrore] = useState(null)
+  const [tavoli, setTavoli] = useState([])
 
   useEffect(() => {
     async function verificaConnessione() {
@@ -16,6 +17,13 @@ function Home() {
         for (const nome of COLLEZIONI) {
           const snap = await getDocs(collection(db, nome))
           conteggi[nome] = snap.size
+          if (nome === 'tavoli') {
+            setTavoli(
+              snap.docs
+                .map((d) => ({ id: d.id, ...d.data() }))
+                .sort((a, b) => Number(a.id) - Number(b.id))
+            )
+          }
         }
         setRisultati(conteggi)
       } catch (err) {
@@ -59,9 +67,9 @@ function Home() {
 
       <p>Tavoli (test rapido):</p>
       <ul>
-        {[1, 2, 3, 4, 5, 6].map((id) => (
-          <li key={id}>
-            <Link to={`/tavolo/${id}`}>Tavolo {id} →</Link>
+        {tavoli.map((tavolo) => (
+          <li key={tavolo.id}>
+            <Link to={`/tavolo/${tavolo.id}`}>{tavolo.nome} →</Link>
           </li>
         ))}
       </ul>

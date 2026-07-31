@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { calcolaKpiTavolo } from '../lib/kpi'
+import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 
@@ -122,7 +123,12 @@ function Regia() {
       <h2>
         Round {round} — {aperto ? 'Aperto' : 'Chiuso'}
       </h2>
-      {aperto && <Timer timerAvvio={sessione.timer_avvio} />}
+      {aperto && (
+        <Timer
+          timerAvvio={sessione.timer_avvio}
+          durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
+        />
+      )}
 
       <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0', flexWrap: 'wrap' }}>
         {!aperto && (

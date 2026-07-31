@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  writeBatch,
+} from 'firebase/firestore'
 import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
-import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione } from '../lib/costanti'
+import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
+import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 
 function Config() {
   const [opzioni, setOpzioni] = useState({})
@@ -13,6 +22,8 @@ function Config() {
   const [caricamento, setCaricamento] = useState(true)
   const [resetInCorso, setResetInCorso] = useState(false)
   const [qrPerTavolo, setQrPerTavolo] = useState({})
+  const [durataMinuti, setDurataMinuti] = useState(DURATA_ROUND_MINUTI_DEFAULT)
+  const [durataStato, setDurataStato] = useState(null)
 
   useEffect(() => {
     caricaDati()
@@ -35,9 +46,10 @@ function Config() {
     setErrore(null)
 
     try {
-      const [opzioniSnap, tavoliSnap] = await Promise.all([
+      const [opzioniSnap, tavoliSnap, sessioneSnap] = await Promise.all([
         getDocs(collection(db, 'opzioni')),
         getDocs(collection(db, 'tavoli')),
+        getDoc(doc(db, 'sessione', 'corrente')),
       ])
 
       const mappaOpzioni = {}
@@ -50,6 +62,8 @@ function Config() {
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => Number(a.id) - Number(b.id))
       setTavoli(listaTavoli)
+
+      setDurataMinuti(sessioneSnap.data()?.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT)
     } catch (err) {
       setErrore(err.message)
     }
@@ -101,6 +115,49 @@ function Config() {
     }
   }
 
+  async function salvaDurata() {
+    setDurataStato('salvataggio')
+    try {
+      await updateDoc(doc(db, 'sessione', 'corrente'), { durata_round_minuti: Number(durataMinuti) })
+      setDurataStato('salvato')
+    } catch (err) {
+      setDurataStato(`errore: ${err.message}`)
+    }
+  }
+
+  async function aggiungiTavolo() {
+    setErrore(null)
+    const idsEsistenti = tavoli.map((t) => Number(t.id))
+    const nuovoId = String((idsEsistenti.length > 0 ? Math.max(...idsEsistenti) : 0) + 1)
+
+    try {
+      await setDoc(doc(db, 'tavoli', nuovoId), { nome: `Tavolo ${nuovoId}` })
+      await caricaDati()
+    } catch (err) {
+      setErrore(err.message)
+    }
+  }
+
+  async function rimuoviTavolo(id) {
+    const confermato = window.confirm(
+      `Rimuovere il tavolo "${id}"? Verranno cancellate anche le sue scelte inviate.`
+    )
+    if (!confermato) return
+
+    setErrore(null)
+    try {
+      const batch = writeBatch(db)
+      batch.delete(doc(db, 'tavoli', id))
+      for (const round of ROUNDS) {
+        batch.delete(doc(db, 'scelte', idScelta(id, round)))
+      }
+      await batch.commit()
+      await caricaDati()
+    } catch (err) {
+      setErrore(err.message)
+    }
+  }
+
   async function resetPartita() {
     const confermato = window.confirm(
       'Reset partita: verranno cancellate tutte le scelte inviate e la sessione tornerà al Round 1 (chiuso). Continuare?'
@@ -140,6 +197,23 @@ function Config() {
       <h1>Config</h1>
 
       {errore && <p style={{ color: 'crimson' }}>❌ {errore}</p>}
+
+      <h2>Timer</h2>
+      <label>
+        Durata round (minuti):{' '}
+        <input
+          type="number"
+          min="0.5"
+          step="0.5"
+          value={durataMinuti}
+          onChange={(e) => setDurataMinuti(e.target.value)}
+          style={{ width: 70 }}
+        />
+      </label>{' '}
+      <button type="button" onClick={salvaDurata}>
+        Salva
+      </button>{' '}
+      <span>{durataStato}</span>
 
       <h2>Matrice punteggi</h2>
       <table cellPadding="6" style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -228,6 +302,9 @@ function Config() {
                   <button type="button" onClick={() => salvaTavolo(tavolo.id)}>
                     Salva
                   </button>{' '}
+                  <button type="button" onClick={() => rimuoviTavolo(tavolo.id)}>
+                    Rimuovi
+                  </button>{' '}
                   <span>{statoRiga[chiave]}</span>
                 </td>
               </tr>
@@ -235,6 +312,9 @@ function Config() {
           })}
         </tbody>
       </table>
+      <button type="button" onClick={aggiungiTavolo}>
+        Aggiungi tavolo
+      </button>
 
       <h2>QR tavoli</h2>
       <p>Un QR per tavolo, da stampare prima dell'evento (usa la stampa del browser, Ctrl/Cmd+P).</p>

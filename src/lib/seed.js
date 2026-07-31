@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore'
 import { db } from './firebaseClient'
 import { LETTERE, NUM_TAVOLI, ROUNDS, idOpzione } from './costanti'
+import { DURATA_ROUND_MINUTI_DEFAULT } from './tempo'
 
 // Popola i dati di base al primo avvio (nessuno script da eseguire a mano).
 export async function assicuraDatiIniziali() {
@@ -36,7 +37,12 @@ export async function assicuraDatiIniziali() {
   const sessioneRef = doc(db, 'sessione', 'corrente')
   const sessioneSnap = await getDoc(sessioneRef)
   if (!sessioneSnap.exists()) {
-    batch.set(sessioneRef, { round_attivo: 1, stato: 'chiuso', timer_avvio: null })
+    batch.set(sessioneRef, {
+      round_attivo: 1,
+      stato: 'chiuso',
+      timer_avvio: null,
+      durata_round_minuti: DURATA_ROUND_MINUTI_DEFAULT,
+    })
     daScrivere = true
   }
 
