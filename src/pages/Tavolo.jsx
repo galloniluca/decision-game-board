@@ -1,8 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
+import { calcolaKpiTavolo } from '../lib/kpi'
+import Timer from '../components/Timer'
+import BoardKpi from '../components/BoardKpi'
 
 function Tavolo() {
   const { id } = useParams()
@@ -11,12 +24,11 @@ function Tavolo() {
   const [errore, setErrore] = useState(null)
   const [tavolo, setTavolo] = useState(null)
   const [sessione, setSessione] = useState(null)
-  const [opzioniRound, setOpzioniRound] = useState([])
+  const [opzioniMap, setOpzioniMap] = useState({})
+  const [scelteTavolo, setScelteTavolo] = useState([])
   const [selezionata, setSelezionata] = useState(null)
-  const [inviata, setInviata] = useState(null)
   const [invioStato, setInvioStato] = useState('inattivo')
 
-  // Nome tavolo: caricato una volta. Sessione: agganciata in tempo reale.
   useEffect(() => {
     let annullato = false
     setCaricamento(true)
@@ -34,11 +46,30 @@ function Tavolo() {
       })
       .catch((err) => !annullato && setErrore(err.message))
 
+    getDocs(collection(db, 'opzioni'))
+      .then((snap) => {
+        if (annullato) return
+        const mappa = {}
+        snap.forEach((d) => {
+          mappa[d.id] = d.data()
+        })
+        setOpzioniMap(mappa)
+      })
+      .catch((err) => !annullato && setErrore(err.message))
+
     const unsubSessione = onSnapshot(
       doc(db, 'sessione', 'corrente'),
       (snap) => {
-        setSessione(snap.data())
+        setSessione(snap.data({ serverTimestamps: 'estimate' }))
         setCaricamento(false)
+      },
+      (err) => setErrore(err.message)
+    )
+
+    const unsubScelte = onSnapshot(
+      query(collection(db, 'scelte'), where('tavolo_id', '==', Number(id))),
+      (snap) => {
+        setScelteTavolo(snap.docs.map((d) => d.data()))
       },
       (err) => setErrore(err.message)
     )
@@ -46,35 +77,17 @@ function Tavolo() {
     return () => {
       annullato = true
       unsubSessione()
+      unsubScelte()
     }
   }, [id])
 
-  // Quando cambia il round attivo: opzioni caricate una volta, propria scelta agganciata in tempo reale.
+  // Quando cambia il round attivo (o arrivano nuove scelte), riparte dalla propria scelta per quel round.
   useEffect(() => {
     if (!sessione) return
-    const round = sessione.round_attivo
-
-    Promise.all(LETTERE.map((lettera) => getDoc(doc(db, 'opzioni', idOpzione(round, lettera)))))
-      .then((snaps) => setOpzioniRound(snaps.map((s) => s.data())))
-      .catch((err) => setErrore(err.message))
-
-    const unsubScelta = onSnapshot(
-      doc(db, 'scelte', idScelta(id, round)),
-      (snap) => {
-        if (snap.exists()) {
-          setInviata(snap.data().opzione)
-          setSelezionata(snap.data().opzione)
-        } else {
-          setInviata(null)
-          setSelezionata(null)
-        }
-        setInvioStato('inattivo')
-      },
-      (err) => setErrore(err.message)
-    )
-
-    return () => unsubScelta()
-  }, [id, sessione?.round_attivo])
+    const sceltaRound = scelteTavolo.find((s) => s.round === sessione.round_attivo)
+    setSelezionata(sceltaRound ? sceltaRound.opzione : null)
+    setInvioStato('inattivo')
+  }, [sessione?.round_attivo, scelteTavolo])
 
   async function inviaScelta() {
     if (!selezionata || !sessione) return
@@ -104,7 +117,10 @@ function Tavolo() {
     )
   }
 
-  const roundChiuso = sessione?.stato !== 'aperto'
+  const round = sessione.round_attivo
+  const roundChiuso = sessione.stato !== 'aperto'
+  const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
+  const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap)
 
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 480, margin: '0 auto' }}>
@@ -112,22 +128,26 @@ function Tavolo() {
 
       {errore && <p style={{ color: 'crimson' }}>❌ {errore}</p>}
 
+      <h3>I tuoi KPI</h3>
+      <BoardKpi totali={totaliKpi} />
+
       {roundChiuso ? (
-        <p>In attesa che la regia apra il Round {sessione?.round_attivo}...</p>
+        <p style={{ marginTop: '1.5rem' }}>In attesa che la regia apra il Round {round}...</p>
       ) : (
         <>
-          <h2>Round {sessione.round_attivo}</h2>
+          <h2 style={{ marginTop: '1.5rem' }}>Round {round}</h2>
+          <Timer timerAvvio={sessione.timer_avvio} />
 
-          {inviata && (
+          {inviataPerRoundAttivo && (
             <p>
-              Hai già inviato: <strong>Opzione {inviata}</strong>. Puoi cambiare scelta e inviare di
-              nuovo finché il round resta aperto.
+              Hai già inviato: <strong>Opzione {inviataPerRoundAttivo}</strong>. Puoi cambiare scelta e
+              inviare di nuovo finché il round resta aperto.
             </p>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: '1rem 0' }}>
-            {LETTERE.map((lettera, i) => {
-              const opzione = opzioniRound[i]
+            {LETTERE.map((lettera) => {
+              const opzione = opzioniMap[idOpzione(round, lettera)]
               const selezionataAttiva = selezionata === lettera
               return (
                 <button

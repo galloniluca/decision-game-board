@@ -132,3 +132,47 @@ Cosa c'è in questo step:
    contatore aggiornarsi
 4. Su `/regia` premi "Chiudi Round 1": su `/tavolo/1` deve tornare subito il messaggio di attesa
 
+## Step 6 — Timer condiviso
+
+Cosa c'è in questo step:
+- `src/lib/tempo.js`: durata round fissa (`DURATA_ROUND_SECONDI`, default 5 minuti — dimmi se la vuoi
+  diversa o resa configurabile da `/config`, per ora è un valore fisso nel codice) e calcolo del tempo
+  rimanente a partire dal timestamp condiviso `sessione.timer_avvio`
+- `src/components/Timer.jsx`: countdown mm:ss che si aggiorna ogni secondo, mostrato sia su `/regia`
+  che su `/tavolo/:id` quando il round è aperto — calcolato dallo stesso timestamp per tutti i
+  dispositivi (non da un timer locale), quindi resta sincronizzato anche con dispositivi diversi
+- A tempo scaduto mostra "Tempo scaduto" in rosso, ma il round non si chiude da solo: resta un aiuto
+  visivo, la chiusura resta un'azione esplicita della regia (coerente col brief)
+
+### Come testare
+
+1. Su `/regia` premi "Apri Round 1": deve comparire un countdown che parte da 5:00 e scende ogni secondo
+2. Apri `/tavolo/1` in parallelo: deve mostrare lo stesso countdown, sincronizzato (stesso secondo,
+   non un timer indipendente che riparte da 5:00 al caricamento)
+3. Aspetta che arrivi a 0:00 (o modifica temporaneamente `DURATA_ROUND_SECONDI` a un valore basso tipo
+   10 per testare più velocemente): deve comparire "Tempo scaduto" in rosso, il round resta comunque aperto
+   finché non premi "Chiudi Round" dalla regia
+
+## Step 7 — Calcolo e visualizzazione KPI
+
+Cosa c'è in questo step:
+- `src/lib/kpi.js`: calcolo dei KPI cumulativi (somma degli shift Q/S/C/P di tutte le scelte inviate da
+  un tavolo, usando la matrice `opzioni` attuale) e soglie semaforo (negativo → rosso, zero → giallo,
+  positivo → verde, come da brief)
+- `src/components/BoardKpi.jsx`: 4 badge colorati Q/S/C/P riutilizzati sia in `/tavolo/:id` (i propri
+  KPI, sempre visibili) sia in `/regia` (board con i KPI di tutti i tavoli, per il debrief)
+- Tutto in tempo reale: i KPI si aggiornano da soli non appena una scelta viene inviata o un round chiuso
+
+### Come testare
+
+1. Prima compila almeno qualche shift diverso da zero nella matrice da `/config` (altrimenti i KPI
+   restano tutti a 0/giallo, tecnicamente corretto ma poco interessante da vedere)
+2. Apri `/tavolo/1`: dovresti vedere "I tuoi KPI" con 4 badge (inizialmente tutti gialli se non hai
+   ancora scelto nulla)
+3. Apri un round dalla regia, invia una scelta con shift diversi da zero: i badge su `/tavolo/1` devono
+   aggiornarsi da soli (colore e valore) non appena la scelta è inviata — anche prima che il round chiuda,
+   dato che si sommano le scelte già inviate
+4. Su `/regia` scorri fino a "Board KPI": deve mostrare la stessa riga di badge per ogni tavolo, aggiornata
+   in tempo reale
+5. Prova "Reset partita" da `/config`: tutti i KPI (tavolo e regia) devono tornare a 0/giallo
+
