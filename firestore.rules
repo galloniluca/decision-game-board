@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Nessuna autenticazione: la sicurezza è minima, basata su URL non
+// prevedibili (coerente con l'uso in un evento live a bassa criticità).
+// Accesso aperto in lettura/scrittura solo alle 4 collezioni del gioco.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tavoli/{id} {
+      allow read, write: if true;
+    }
+    match /opzioni/{id} {
+      allow read, write: if true;
+    }
+    match /sessione/{id} {
+      allow read, write: if true;
+    }
+    match /scelte/{id} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '../lib/firebaseClient'
 
-const TABELLE = ['tavoli', 'opzioni', 'sessione', 'scelte']
+const COLLEZIONI = ['tavoli', 'opzioni', 'sessione', 'scelte']
 
 function Home() {
   const [risultati, setRisultati] = useState(null)
@@ -10,19 +11,16 @@ function Home() {
 
   useEffect(() => {
     async function verificaConnessione() {
-      const conteggi = {}
-      for (const tabella of TABELLE) {
-        const { count, error } = await supabase
-          .from(tabella)
-          .select('*', { count: 'exact', head: true })
-
-        if (error) {
-          setErrore(`Errore su tabella "${tabella}": ${error.message}`)
-          return
+      try {
+        const conteggi = {}
+        for (const nome of COLLEZIONI) {
+          const snap = await getDocs(collection(db, nome))
+          conteggi[nome] = snap.size
         }
-        conteggi[tabella] = count
+        setRisultati(conteggi)
+      } catch (err) {
+        setErrore(err.message)
       }
-      setRisultati(conteggi)
     }
 
     verificaConnessione()
@@ -31,13 +29,13 @@ function Home() {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 480 }}>
       <h1>Lean Trade-off Game — Setup</h1>
-      <p>Verifica di connessione a Supabase.</p>
+      <p>Verifica di connessione a Firebase/Firestore.</p>
 
       {errore && (
         <p style={{ color: 'crimson' }}>
           ❌ {errore}
           <br />
-          Controlla il file <code>.env.local</code> e che lo schema SQL sia stato eseguito.
+          Controlla il file <code>.env.local</code> e le regole di sicurezza Firestore.
         </p>
       )}
 
@@ -45,9 +43,9 @@ function Home() {
 
       {risultati && (
         <ul>
-          {TABELLE.map((tabella) => (
-            <li key={tabella}>
-              ✅ <code>{tabella}</code>: {risultati[tabella]} righe
+          {COLLEZIONI.map((nome) => (
+            <li key={nome}>
+              ✅ <code>{nome}</code>: {risultati[nome]} documenti
             </li>
           ))}
         </ul>

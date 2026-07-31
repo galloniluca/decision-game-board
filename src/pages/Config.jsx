@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-
-const ROUNDS = [1, 2, 3, 4]
-const LETTERE = ['A', 'B', 'C']
-const SHIFT_VALORI = [-1, 0, 1]
-
-function chiaveOpzione(round, opzione) {
-  return `${round}-${opzione}`
-}
+import { collection, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import { db } from '../lib/firebaseClient'
+import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione } from '../lib/costanti'
 
 function Config() {
   const [opzioni, setOpzioni] = useState({})
@@ -26,29 +20,31 @@ function Config() {
     setCaricamento(true)
     setErrore(null)
 
-    const [{ data: opzioniData, error: opzioniErr }, { data: tavoliData, error: tavoliErr }] =
-      await Promise.all([
-        supabase.from('opzioni').select('*').order('round').order('opzione'),
-        supabase.from('tavoli').select('*').order('id'),
+    try {
+      const [opzioniSnap, tavoliSnap] = await Promise.all([
+        getDocs(collection(db, 'opzioni')),
+        getDocs(collection(db, 'tavoli')),
       ])
 
-    if (opzioniErr || tavoliErr) {
-      setErrore((opzioniErr || tavoliErr).message)
-      setCaricamento(false)
-      return
+      const mappaOpzioni = {}
+      opzioniSnap.forEach((d) => {
+        mappaOpzioni[d.id] = d.data()
+      })
+      setOpzioni(mappaOpzioni)
+
+      const listaTavoli = tavoliSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => Number(a.id) - Number(b.id))
+      setTavoli(listaTavoli)
+    } catch (err) {
+      setErrore(err.message)
     }
 
-    const mappaOpzioni = {}
-    for (const riga of opzioniData) {
-      mappaOpzioni[chiaveOpzione(riga.round, riga.opzione)] = riga
-    }
-    setOpzioni(mappaOpzioni)
-    setTavoli(tavoliData)
     setCaricamento(false)
   }
 
   function aggiornaCampoOpzione(round, opzione, campo, valore) {
-    const chiave = chiaveOpzione(round, opzione)
+    const chiave = idOpzione(round, opzione)
     setOpzioni((prev) => ({
       ...prev,
       [chiave]: { ...prev[chiave], [campo]: valore },
@@ -56,23 +52,22 @@ function Config() {
   }
 
   async function salvaOpzione(round, opzione) {
-    const chiave = chiaveOpzione(round, opzione)
+    const chiave = idOpzione(round, opzione)
     const riga = opzioni[chiave]
     setStatoRiga((prev) => ({ ...prev, [chiave]: 'salvataggio' }))
 
-    const { error } = await supabase
-      .from('opzioni')
-      .update({
+    try {
+      await updateDoc(doc(db, 'opzioni', chiave), {
         nome: riga.nome,
         shift_q: riga.shift_q,
         shift_s: riga.shift_s,
         shift_c: riga.shift_c,
         shift_p: riga.shift_p,
       })
-      .eq('round', round)
-      .eq('opzione', opzione)
-
-    setStatoRiga((prev) => ({ ...prev, [chiave]: error ? `errore: ${error.message}` : 'salvato' }))
+      setStatoRiga((prev) => ({ ...prev, [chiave]: 'salvato' }))
+    } catch (err) {
+      setStatoRiga((prev) => ({ ...prev, [chiave]: `errore: ${err.message}` }))
+    }
   }
 
   function aggiornaNomeTavolo(id, nome) {
@@ -84,9 +79,12 @@ function Config() {
     const chiave = `tavolo-${id}`
     setStatoRiga((prev) => ({ ...prev, [chiave]: 'salvataggio' }))
 
-    const { error } = await supabase.from('tavoli').update({ nome: tavolo.nome }).eq('id', id)
-
-    setStatoRiga((prev) => ({ ...prev, [chiave]: error ? `errore: ${error.message}` : 'salvato' }))
+    try {
+      await updateDoc(doc(db, 'tavoli', id), { nome: tavolo.nome })
+      setStatoRiga((prev) => ({ ...prev, [chiave]: 'salvato' }))
+    } catch (err) {
+      setStatoRiga((prev) => ({ ...prev, [chiave]: `errore: ${err.message}` }))
+    }
   }
 
   async function resetPartita() {
@@ -98,19 +96,24 @@ function Config() {
     setResetInCorso(true)
     setErrore(null)
 
-    const { error: errScelte } = await supabase.from('scelte').delete().gte('id', 0)
-    const { error: errSessione } = await supabase
-      .from('sessione')
-      .update({ round_attivo: 1, stato: 'chiuso', timer_avvio: null })
-      .eq('id', 1)
+    try {
+      const scelteSnap = await getDocs(collection(db, 'scelte'))
+      const batch = writeBatch(db)
+      scelteSnap.forEach((d) => batch.delete(d.ref))
+      await batch.commit()
+
+      await setDoc(doc(db, 'sessione', 'corrente'), {
+        round_attivo: 1,
+        stato: 'chiuso',
+        timer_avvio: null,
+      })
+
+      window.alert('Partita resettata.')
+    } catch (err) {
+      setErrore(err.message)
+    }
 
     setResetInCorso(false)
-
-    if (errScelte || errSessione) {
-      setErrore((errScelte || errSessione).message)
-    } else {
-      window.alert('Partita resettata.')
-    }
   }
 
   if (caricamento) return <p style={{ padding: '2rem' }}>Caricamento...</p>
@@ -141,7 +144,7 @@ function Config() {
         <tbody>
           {ROUNDS.map((round) =>
             LETTERE.map((opzione) => {
-              const chiave = chiaveOpzione(round, opzione)
+              const chiave = idOpzione(round, opzione)
               const riga = opzioni[chiave]
               if (!riga) return null
               return (
