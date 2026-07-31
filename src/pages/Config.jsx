@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione } from '../lib/costanti'
 
@@ -11,10 +12,23 @@ function Config() {
   const [errore, setErrore] = useState(null)
   const [caricamento, setCaricamento] = useState(true)
   const [resetInCorso, setResetInCorso] = useState(false)
+  const [qrPerTavolo, setQrPerTavolo] = useState({})
 
   useEffect(() => {
     caricaDati()
   }, [])
+
+  useEffect(() => {
+    async function generaQr() {
+      const mappa = {}
+      for (const tavolo of tavoli) {
+        const url = `${window.location.origin}/tavolo/${tavolo.id}`
+        mappa[tavolo.id] = await QRCode.toDataURL(url, { width: 220, margin: 1 })
+      }
+      setQrPerTavolo(mappa)
+    }
+    if (tavoli.length > 0) generaQr()
+  }, [tavoli])
 
   async function caricaDati() {
     setCaricamento(true)
@@ -221,6 +235,19 @@ function Config() {
           })}
         </tbody>
       </table>
+
+      <h2>QR tavoli</h2>
+      <p>Un QR per tavolo, da stampare prima dell'evento (usa la stampa del browser, Ctrl/Cmd+P).</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
+        {tavoli.map((tavolo) => (
+          <div key={tavolo.id} style={{ textAlign: 'center' }}>
+            {qrPerTavolo[tavolo.id] && (
+              <img src={qrPerTavolo[tavolo.id]} alt={`QR ${tavolo.nome}`} width={150} height={150} />
+            )}
+            <p>{tavolo.nome}</p>
+          </div>
+        ))}
+      </div>
 
       <h2>Reset partita</h2>
       <p>Cancella tutte le scelte inviate e riporta la sessione al Round 1 (chiuso).</p>

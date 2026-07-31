@@ -176,3 +176,22 @@ Cosa c'è in questo step:
    in tempo reale
 5. Prova "Reset partita" da `/config`: tutti i KPI (tavolo e regia) devono tornare a 0/giallo
 
+## Step 8 — Rifinitura e test
+
+Cosa c'è in questo step (parte automatizzabile):
+- `/config` → sezione "QR tavoli": un QR code per ogni tavolo, generato interamente lato client
+  (nessuna chiamata a servizi esterni) puntando all'URL pubblico corretto in automatico
+  (`/tavolo/1` ... `/tavolo/6`), pronto da stampare con Ctrl/Cmd+P
+
+Cosa manca e richiede il tuo intervento (non posso testarlo io da qui: il mio ambiente sandbox non
+riesce a raggiungere né il sito pubblicato né Firebase per policy di rete):
+- Stampare/scansionare i QR e verificare che aprano il tavolo giusto da telefono/tablet reali
+- Giocare una partita intera a 4 round con più dispositivi reali in parallelo
+- Verificare il comportamento con rete instabile (spegnere il wifi a metà round e vedere cosa succede
+  quando torna: i dati non salvati localmente si perdono, ma tutto quello già inviato resta corretto —
+  è il comportamento atteso "se la rete cade si continua su carta" del brief)
+
+Nota a parte: la durata del round (`DURATA_ROUND_SECONDI` in `src/lib/tempo.js`, ora 5 minuti) è un
+valore fisso nel codice — fammi sapere se va bene così o se preferisci poterla cambiare da `/config`
+senza richiedermi un redeploy.
+
