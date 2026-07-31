@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Config from './pages/Config'
+import Tavolo from './pages/Tavolo'
 import { assicuraDatiIniziali } from './lib/seed'
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/config" element={<Config />} />
+      <Route path="/tavolo/:id" element={<Tavolo />} />
     </Routes>
   )
 }

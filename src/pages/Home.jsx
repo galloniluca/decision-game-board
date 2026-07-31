@@ -54,6 +54,15 @@ function Home() {
       <p>
         <Link to="/config">Vai alla Config →</Link>
       </p>
+
+      <p>Tavoli (test rapido):</p>
+      <ul>
+        {[1, 2, 3, 4, 5, 6].map((id) => (
+          <li key={id}>
+            <Link to={`/tavolo/${id}`}>Tavolo {id} →</Link>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

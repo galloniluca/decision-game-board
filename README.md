@@ -54,7 +54,41 @@ In sintesi, una volta ottenuta la configurazione Firebase:
 5. Prova "Reset partita" (conferma il popup) e verifica su Firebase Console che `scelte` sia vuota
    e `sessione` sia tornata a `round_attivo=1`, `stato=chiuso`
 
+## Deploy
+
+Pubblicato su Cloudflare Workers (static assets), collegato al branch `claude/lean-tradeoff-game-app-voyyne`:
+https://decision-game-board.galloni-luca.workers.dev
+
+Ogni push su questo branch aggiorna automaticamente il sito pubblicato.
+
+## Step 3 — Vista Tavolo, statica
+
+Cosa c'è in questo step:
+- Route `/tavolo/:id` (`src/pages/Tavolo.jsx`)
+- Mostra il nome del tavolo e, se il round è aperto, le 3 opzioni A/B/C del round attivo (solo lettera
+  e nome, senza mostrare gli shift ai giocatori)
+- Selezione di un'opzione e invio scelta (scritta in `scelte` con id `${tavolo_id}_${round}`, quindi
+  al massimo una scelta per tavolo per round — un nuovo invio nello stesso round sovrascrive il precedente)
+- Se il round è chiuso, mostra un messaggio di attesa
+- Nessun timer, nessun realtime: per vedere aggiornamenti serve ricaricare la pagina (pulsante "Ricarica"
+  o refresh del browser) — verranno collegati negli step 5-6
+- Link rapidi ai 6 tavoli aggiunti nella Home per test veloce
+
+### Come testare
+
+Dato che la vista Regia (Step 4) non esiste ancora, per aprire un round bisogna farlo a mano da Firebase Console:
+
+1. Vai su Firebase Console → Firestore Database → collezione `sessione` → documento `corrente`
+2. Cambia il campo `stato` da `chiuso` a `aperto` (click sul valore, modifica, salva)
+3. Apri `/tavolo/1` (o dalla Home → "Tavolo 1 →"): dovresti vedere "Round 1" e le 3 opzioni A/B/C
+   (i nomi saranno vuoti se non li hai ancora compilati in Config — va bene lo stesso per il test)
+4. Seleziona un'opzione, premi "Invia scelta" → dovresti vedere "✅ Scelta inviata"
+5. Ricarica la pagina: dovresti vedere "Hai già inviato: Opzione X"
+6. Verifica su Firestore Console che sia comparso un documento in `scelte` con id `1_1` e i campi corretti
+7. Prova anche a cambiare scelta e reinviare: il documento `1_1` deve aggiornarsi, non duplicarsi
+8. Rimetti `stato` su `chiuso` quando hai finito (o usa "Reset partita" da `/config`)
+
 ### Prossimo step
 
-Step 3 — Vista Tavolo, statica: schermata `/tavolo/:id` con round attivo, opzioni A/B/C e invio scelta
-(senza timer/realtime). In attesa di conferma prima di procedere.
+Step 4 — Vista Regia, statica: pannello con round corrente, elenco scelte arrivate, pulsanti apri/chiudi
+round (così non serve più aprire i round a mano da Firebase Console). In attesa di conferma prima di procedere.
