@@ -13,6 +13,7 @@ import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
+import Topbar from '../components/Topbar'
 
 function Config() {
   const [opzioni, setOpzioni] = useState({})
@@ -187,153 +188,200 @@ function Config() {
     setResetInCorso(false)
   }
 
-  if (caricamento) return <p style={{ padding: '2rem' }}>Caricamento...</p>
+  if (caricamento) {
+    return (
+      <div className="page">
+        <Topbar />
+        <div className="page-inner page-inner--wide">
+          <p className="status-muted">Caricamento...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 900 }}>
-      <p>
-        <Link to="/">← Home</Link>
-      </p>
-      <h1>Config</h1>
+    <div className="page">
+      <Topbar
+        right={
+          <span className="nav-links">
+            <Link to="/">Home</Link>
+            <Link to="/regia">Regia</Link>
+          </span>
+        }
+      />
+      <div className="page-inner page-inner--wide">
+        <h1>Config</h1>
 
-      {errore && <p style={{ color: 'crimson' }}>❌ {errore}</p>}
+        {errore && <p className="status-error">❌ {errore}</p>}
 
-      <h2>Timer</h2>
-      <label>
-        Durata round (minuti):{' '}
-        <input
-          type="number"
-          min="0.5"
-          step="0.5"
-          value={durataMinuti}
-          onChange={(e) => setDurataMinuti(e.target.value)}
-          style={{ width: 70 }}
-        />
-      </label>{' '}
-      <button type="button" onClick={salvaDurata}>
-        Salva
-      </button>{' '}
-      <span>{durataStato}</span>
-
-      <h2>Matrice punteggi</h2>
-      <table cellPadding="6" style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #333', textAlign: 'left' }}>
-            <th>Round</th>
-            <th>Opz.</th>
-            <th>Nome opzione</th>
-            <th>Q</th>
-            <th>S</th>
-            <th>C</th>
-            <th>P</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {ROUNDS.map((round) =>
-            LETTERE.map((opzione) => {
-              const chiave = idOpzione(round, opzione)
-              const riga = opzioni[chiave]
-              if (!riga) return null
-              return (
-                <tr key={chiave} style={{ borderBottom: '1px solid #ddd' }}>
-                  <td>{round}</td>
-                  <td>{opzione}</td>
-                  <td>
-                    <input
-                      type="text"
-                      value={riga.nome ?? ''}
-                      onChange={(e) => aggiornaCampoOpzione(round, opzione, 'nome', e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </td>
-                  {['shift_q', 'shift_s', 'shift_c', 'shift_p'].map((campo) => (
-                    <td key={campo}>
-                      <select
-                        value={riga[campo]}
-                        onChange={(e) =>
-                          aggiornaCampoOpzione(round, opzione, campo, Number(e.target.value))
-                        }
-                      >
-                        {SHIFT_VALORI.map((v) => (
-                          <option key={v} value={v}>
-                            {v > 0 ? `+${v}` : v}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  ))}
-                  <td>
-                    <button type="button" onClick={() => salvaOpzione(round, opzione)}>
-                      Salva
-                    </button>{' '}
-                    <span>{statoRiga[chiave]}</span>
-                  </td>
-                </tr>
-              )
-            })
-          )}
-        </tbody>
-      </table>
-
-      <h2>Tavoli</h2>
-      <table cellPadding="6" style={{ borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #333', textAlign: 'left' }}>
-            <th>ID</th>
-            <th>Nome</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {tavoli.map((tavolo) => {
-            const chiave = `tavolo-${tavolo.id}`
-            return (
-              <tr key={tavolo.id} style={{ borderBottom: '1px solid #ddd' }}>
-                <td>{tavolo.id}</td>
-                <td>
-                  <input
-                    type="text"
-                    value={tavolo.nome}
-                    onChange={(e) => aggiornaNomeTavolo(tavolo.id, e.target.value)}
-                  />
-                </td>
-                <td>
-                  <button type="button" onClick={() => salvaTavolo(tavolo.id)}>
-                    Salva
-                  </button>{' '}
-                  <button type="button" onClick={() => rimuoviTavolo(tavolo.id)}>
-                    Rimuovi
-                  </button>{' '}
-                  <span>{statoRiga[chiave]}</span>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      <button type="button" onClick={aggiungiTavolo}>
-        Aggiungi tavolo
-      </button>
-
-      <h2>QR tavoli</h2>
-      <p>Un QR per tavolo, da stampare prima dell'evento (usa la stampa del browser, Ctrl/Cmd+P).</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
-        {tavoli.map((tavolo) => (
-          <div key={tavolo.id} style={{ textAlign: 'center' }}>
-            {qrPerTavolo[tavolo.id] && (
-              <img src={qrPerTavolo[tavolo.id]} alt={`QR ${tavolo.nome}`} width={150} height={150} />
-            )}
-            <p>{tavolo.nome}</p>
+        <div className="card">
+          <h3>Timer</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.5rem' }}>
+            <label htmlFor="durata-round">Durata round (minuti)</label>
+            <input
+              id="durata-round"
+              type="number"
+              min="0.5"
+              step="0.5"
+              className="input"
+              value={durataMinuti}
+              onChange={(e) => setDurataMinuti(e.target.value)}
+              style={{ width: 70 }}
+            />
+            <button type="button" className="btn btn-primary" onClick={salvaDurata}>
+              Salva
+            </button>
+            <span className="status-muted">{durataStato}</span>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <h2>Reset partita</h2>
-      <p>Cancella tutte le scelte inviate e riporta la sessione al Round 1 (chiuso).</p>
-      <button type="button" onClick={resetPartita} disabled={resetInCorso}>
-        {resetInCorso ? 'Reset in corso...' : 'Reset partita'}
-      </button>
+        <div className="card">
+          <h3>Matrice punteggi</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Round</th>
+                  <th>Opz.</th>
+                  <th>Nome opzione</th>
+                  <th>Q</th>
+                  <th>S</th>
+                  <th>C</th>
+                  <th>P</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {ROUNDS.map((round) =>
+                  LETTERE.map((opzione) => {
+                    const chiave = idOpzione(round, opzione)
+                    const riga = opzioni[chiave]
+                    if (!riga) return null
+                    return (
+                      <tr key={chiave}>
+                        <td>{round}</td>
+                        <td>{opzione}</td>
+                        <td>
+                          <input
+                            type="text"
+                            className="input"
+                            value={riga.nome ?? ''}
+                            onChange={(e) =>
+                              aggiornaCampoOpzione(round, opzione, 'nome', e.target.value)
+                            }
+                            style={{ width: '100%' }}
+                          />
+                        </td>
+                        {['shift_q', 'shift_s', 'shift_c', 'shift_p'].map((campo) => (
+                          <td key={campo}>
+                            <select
+                              className="input"
+                              value={riga[campo]}
+                              onChange={(e) =>
+                                aggiornaCampoOpzione(round, opzione, campo, Number(e.target.value))
+                              }
+                            >
+                              {SHIFT_VALORI.map((v) => (
+                                <option key={v} value={v}>
+                                  {v > 0 ? `+${v}` : v}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        ))}
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <button type="button" className="btn btn-sm" onClick={() => salvaOpzione(round, opzione)}>
+                            Salva
+                          </button>{' '}
+                          <span className="status-muted">{statoRiga[chiave]}</span>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Tavoli</h3>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {tavoli.map((tavolo) => {
+                const chiave = `tavolo-${tavolo.id}`
+                return (
+                  <tr key={tavolo.id}>
+                    <td>{tavolo.id}</td>
+                    <td>
+                      <input
+                        type="text"
+                        className="input"
+                        value={tavolo.nome}
+                        onChange={(e) => aggiornaNomeTavolo(tavolo.id, e.target.value)}
+                      />
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button type="button" className="btn btn-sm" onClick={() => salvaTavolo(tavolo.id)}>
+                        Salva
+                      </button>{' '}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => rimuoviTavolo(tavolo.id)}
+                      >
+                        Rimuovi
+                      </button>{' '}
+                      <span className="status-muted">{statoRiga[chiave]}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <button type="button" className="btn" style={{ marginTop: '0.75rem' }} onClick={aggiungiTavolo}>
+            + Aggiungi tavolo
+          </button>
+        </div>
+
+        <div className="card">
+          <h3>QR tavoli</h3>
+          <p className="status-muted">
+            Un QR per tavolo, da stampare prima dell'evento (usa la stampa del browser, Ctrl/Cmd+P).
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.5rem' }}>
+            {tavoli.map((tavolo) => (
+              <div key={tavolo.id} style={{ textAlign: 'center' }}>
+                {qrPerTavolo[tavolo.id] && (
+                  <img
+                    src={qrPerTavolo[tavolo.id]}
+                    alt={`QR ${tavolo.nome}`}
+                    width={150}
+                    height={150}
+                    style={{ borderRadius: 8, border: '1px solid var(--border)' }}
+                  />
+                )}
+                <p style={{ marginTop: '0.4rem', fontWeight: 600 }}>{tavolo.nome}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Reset partita</h3>
+          <p className="status-muted">Cancella tutte le scelte inviate e riporta la sessione al Round 1 (chiuso).</p>
+          <button type="button" className="btn btn-danger" onClick={resetPartita} disabled={resetInCorso}>
+            {resetInCorso ? 'Reset in corso...' : 'Reset partita'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

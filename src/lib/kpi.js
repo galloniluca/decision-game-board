@@ -20,5 +20,3 @@ export function semaforo(valore) {
   if (valore === 0) return 'giallo'
   return 'verde'
 }
-
-export const COLORE_SEMAFORO = { rosso: '#e5484d', giallo: '#f5d90a', verde: '#30a46c' }

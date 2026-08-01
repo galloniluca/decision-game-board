@@ -17,6 +17,7 @@ import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
+import Topbar from '../components/Topbar'
 
 function Tavolo() {
   const { id } = useParams()
@@ -108,12 +109,24 @@ function Tavolo() {
     }
   }
 
-  if (caricamento) return <p style={{ padding: '2rem' }}>Caricamento...</p>
+  if (caricamento) {
+    return (
+      <div className="page">
+        <Topbar />
+        <div className="page-inner">
+          <p className="status-muted">Caricamento...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (errore && !tavolo) {
     return (
-      <div style={{ fontFamily: 'sans-serif', padding: '2rem' }}>
-        <p style={{ color: 'crimson' }}>❌ {errore}</p>
+      <div className="page">
+        <Topbar />
+        <div className="page-inner">
+          <p className="status-error">❌ {errore}</p>
+        </div>
       </div>
     )
   }
@@ -124,67 +137,81 @@ function Tavolo() {
   const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap)
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 480, margin: '0 auto' }}>
-      <h1>{tavolo.nome}</h1>
+    <div className="page">
+      <Topbar />
+      <div className="page-inner">
+        <h1>{tavolo.nome}</h1>
 
-      {errore && <p style={{ color: 'crimson' }}>❌ {errore}</p>}
+        {errore && <p className="status-error">❌ {errore}</p>}
 
-      <h3>I tuoi KPI</h3>
-      <BoardKpi totali={totaliKpi} />
+        <div className="card">
+          <h3>I tuoi KPI</h3>
+          <BoardKpi totali={totaliKpi} />
+        </div>
 
-      {roundChiuso ? (
-        <p style={{ marginTop: '1.5rem' }}>In attesa che la regia apra il Round {round}...</p>
-      ) : (
-        <>
-          <h2 style={{ marginTop: '1.5rem' }}>Round {round}</h2>
-          <Timer
-            timerAvvio={sessione.timer_avvio}
-            durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
-          />
-
-          {inviataPerRoundAttivo && (
-            <p>
-              Hai già inviato: <strong>Opzione {inviataPerRoundAttivo}</strong>. Puoi cambiare scelta e
-              inviare di nuovo finché il round resta aperto.
+        {roundChiuso ? (
+          <div className="card">
+            <span className="badge-pill chiuso">Round {round} · Chiuso</span>
+            <p className="status-muted" style={{ marginTop: '0.75rem' }}>
+              In attesa che la regia apra il round...
             </p>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: '1rem 0' }}>
-            {LETTERE.map((lettera) => {
-              const opzione = opzioniMap[idOpzione(round, lettera)]
-              const selezionataAttiva = selezionata === lettera
-              return (
-                <button
-                  key={lettera}
-                  type="button"
-                  onClick={() => setSelezionata(lettera)}
-                  style={{
-                    padding: '1rem',
-                    textAlign: 'left',
-                    borderRadius: 6,
-                    border: selezionataAttiva ? '2px solid #aa3bff' : '1px solid #888',
-                    background: selezionataAttiva ? '#aa3bff' : 'transparent',
-                    color: selezionataAttiva ? '#fff' : 'inherit',
-                    fontWeight: selezionataAttiva ? 'bold' : 'normal',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <strong>{lettera}</strong>
-                  {opzione?.nome ? ` — ${opzione.nome}` : ''}
-                </button>
-              )
-            })}
           </div>
+        ) : (
+          <div className="card">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '0.25rem',
+              }}
+            >
+              <h2 style={{ margin: 0 }}>Round {round}</h2>
+              <span className="badge-pill aperto">Aperto</span>
+            </div>
 
-          <button
-            type="button"
-            onClick={inviaScelta}
-            disabled={!selezionata || invioStato === 'invio'}
-          >
-            {invioStato === 'invio' ? 'Invio in corso...' : 'Invia scelta'}
-          </button>
-        </>
-      )}
+            <Timer
+              timerAvvio={sessione.timer_avvio}
+              durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
+            />
+
+            {inviataPerRoundAttivo && (
+              <p className="status-muted">
+                Hai già inviato: <strong>Opzione {inviataPerRoundAttivo}</strong>. Puoi cambiare
+                scelta e inviare di nuovo finché il round resta aperto.
+              </p>
+            )}
+
+            <div className="option-list">
+              {LETTERE.map((lettera) => {
+                const opzione = opzioniMap[idOpzione(round, lettera)]
+                const selezionataAttiva = selezionata === lettera
+                return (
+                  <button
+                    key={lettera}
+                    type="button"
+                    onClick={() => setSelezionata(lettera)}
+                    className={`option-btn${selezionataAttiva ? ' selected' : ''}`}
+                  >
+                    <span className="option-letter">{lettera}</span>
+                    <span>{opzione?.nome || `Opzione ${lettera}`}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={inviaScelta}
+              disabled={!selezionata || invioStato === 'invio'}
+              style={{ width: '100%' }}
+            >
+              {invioStato === 'invio' ? 'Invio in corso...' : 'Invia scelta'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

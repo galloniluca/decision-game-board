@@ -17,7 +17,7 @@ function Timer({ timerAvvio, durataSecondi }) {
   const scaduto = rimanenti <= 0
 
   return (
-    <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: scaduto ? 'crimson' : 'inherit' }}>
+    <p className={scaduto ? 'timer expired' : 'timer'}>
       {scaduto ? 'Tempo scaduto' : formattaMMSS(rimanenti)}
     </p>
   )

@@ -6,6 +6,7 @@ import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
+import Topbar from '../components/Topbar'
 
 function Regia() {
   const [caricamento, setCaricamento] = useState(true)
@@ -98,7 +99,16 @@ function Regia() {
     setAzioneInCorso(false)
   }
 
-  if (caricamento) return <p style={{ padding: '2rem' }}>Caricamento...</p>
+  if (caricamento) {
+    return (
+      <div className="page">
+        <Topbar />
+        <div className="page-inner page-inner--wide">
+          <p className="status-muted">Caricamento...</p>
+        </div>
+      </div>
+    )
+  }
 
   const round = sessione.round_attivo
   const aperto = sessione.stato === 'aperto'
@@ -112,74 +122,105 @@ function Regia() {
   const numInviati = Object.keys(inviatiPerTavolo).length
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-      <p>
-        <Link to="/">← Home</Link>
-      </p>
-      <h1>Regia</h1>
+    <div className="page">
+      <Topbar
+        right={
+          <span className="nav-links">
+            <Link to="/">Home</Link>
+            <Link to="/config">Config</Link>
+          </span>
+        }
+      />
+      <div className="page-inner page-inner--wide">
+        <h1>Regia</h1>
 
-      {errore && <p style={{ color: 'crimson' }}>❌ {errore}</p>}
+        {errore && <p className="status-error">❌ {errore}</p>}
 
-      <h2>
-        Round {round} — {aperto ? 'Aperto' : 'Chiuso'}
-      </h2>
-      {aperto && (
-        <Timer
-          timerAvvio={sessione.timer_avvio}
-          durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
-        />
-      )}
+        <div className="card">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.25rem',
+            }}
+          >
+            <h2 style={{ margin: 0 }}>Round {round}</h2>
+            <span className={`badge-pill ${aperto ? 'aperto' : 'chiuso'}`}>
+              {aperto ? 'Aperto' : 'Chiuso'}
+            </span>
+          </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0', flexWrap: 'wrap' }}>
-        {!aperto && (
-          <button type="button" onClick={apriRound} disabled={azioneInCorso}>
-            Apri Round {round}
-          </button>
-        )}
-        {aperto && (
-          <button type="button" onClick={chiudiRound} disabled={azioneInCorso}>
-            Chiudi Round {round}
-          </button>
-        )}
-        {!aperto && round < 4 && (
-          <button type="button" onClick={avanzaRound} disabled={azioneInCorso}>
-            Avanza al Round {round + 1}
-          </button>
-        )}
+          {aperto && (
+            <Timer
+              timerAvvio={sessione.timer_avvio}
+              durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
+            />
+          )}
+
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            {!aperto && (
+              <button type="button" className="btn btn-primary" onClick={apriRound} disabled={azioneInCorso}>
+                Apri Round {round}
+              </button>
+            )}
+            {aperto && (
+              <button type="button" className="btn btn-primary" onClick={chiudiRound} disabled={azioneInCorso}>
+                Chiudi Round {round}
+              </button>
+            )}
+            {!aperto && round < 4 && (
+              <button type="button" className="btn" onClick={avanzaRound} disabled={azioneInCorso}>
+                Avanza al Round {round + 1}
+              </button>
+            )}
+          </div>
+
+          {!aperto && round === 4 && (
+            <p className="status-muted" style={{ marginTop: '0.75rem' }}>
+              Round 4 chiuso: fine partita. Ecco la board finale per il debrief.
+            </p>
+          )}
+        </div>
+
+        <div className="card">
+          <h3>
+            Scelte inviate — {numInviati} su {tavoli.length}
+          </h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+            {tavoli.map((tavolo) => (
+              <span
+                key={tavolo.id}
+                className={`badge-pill ${inviatiPerTavolo[tavolo.id] ? 'aperto' : 'chiuso'}`}
+              >
+                {inviatiPerTavolo[tavolo.id] ? '✓' : '·'} {tavolo.nome}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Board KPI</h3>
+          <table className="table">
+            <tbody>
+              {tavoli.map((tavolo) => {
+                const scelteTavolo = scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))
+                const totali = calcolaKpiTavolo(scelteTavolo, opzioniMap)
+                return (
+                  <tr key={tavolo.id}>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{tavolo.nome}</td>
+                    <td>
+                      <BoardKpi totali={totali} />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="status-muted">Aggiornamento in tempo reale: non serve ricaricare la pagina.</p>
       </div>
-
-      {!aperto && round === 4 && <p>Round 4 chiuso: fine partita. Ecco la board finale per il debrief.</p>}
-
-      <h3>
-        Scelte inviate: {numInviati} su {tavoli.length}
-      </h3>
-      <ul>
-        {tavoli.map((tavolo) => (
-          <li key={tavolo.id}>
-            {inviatiPerTavolo[tavolo.id] ? '✅' : '⬜'} {tavolo.nome}
-          </li>
-        ))}
-      </ul>
-
-      <h3>Board KPI</h3>
-      <table cellPadding="8" style={{ borderCollapse: 'collapse' }}>
-        <tbody>
-          {tavoli.map((tavolo) => {
-            const scelteTavolo = scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))
-            const totali = calcolaKpiTavolo(scelteTavolo, opzioniMap)
-            return (
-              <tr key={tavolo.id} style={{ borderBottom: '1px solid #ddd' }}>
-                <td style={{ paddingRight: '1rem', whiteSpace: 'nowrap' }}>{tavolo.nome}</td>
-                <td>
-                  <BoardKpi totali={totali} />
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-
-      <p style={{ color: '#666' }}>Aggiornamento in tempo reale: non serve ricaricare la pagina.</p>
     </div>
   )
 }
