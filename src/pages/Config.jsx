@@ -13,6 +13,7 @@ import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
+import { MATRICE_ESEMPIO } from '../lib/matriceEsempio'
 import Topbar from '../components/Topbar'
 
 function Config() {
@@ -113,6 +114,27 @@ function Config() {
       setStatoRiga((prev) => ({ ...prev, [chiave]: 'salvato' }))
     } catch (err) {
       setStatoRiga((prev) => ({ ...prev, [chiave]: `errore: ${err.message}` }))
+    }
+  }
+
+  async function caricaMatriceEsempio() {
+    const confermato = window.confirm(
+      'Sovrascrivere la matrice punteggi attuale con i valori di esempio? Potrai comunque modificarla riga per riga dopo.'
+    )
+    if (!confermato) return
+
+    setErrore(null)
+    try {
+      const batch = writeBatch(db)
+      for (const round of ROUNDS) {
+        for (const opzione of LETTERE) {
+          batch.update(doc(db, 'opzioni', idOpzione(round, opzione)), MATRICE_ESEMPIO[round][opzione])
+        }
+      }
+      await batch.commit()
+      await caricaDati()
+    } catch (err) {
+      setErrore(err.message)
     }
   }
 
@@ -236,8 +258,21 @@ function Config() {
         </div>
 
         <div className="card">
-          <h3>Matrice punteggi</h3>
-          <div style={{ overflowX: 'auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Matrice punteggi</h3>
+            <button type="button" className="btn btn-sm" onClick={caricaMatriceEsempio}>
+              Carica matrice di esempio
+            </button>
+          </div>
+          <div style={{ overflowX: 'auto', marginTop: '0.75rem' }}>
             <table className="table">
               <thead>
                 <tr>

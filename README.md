@@ -208,3 +208,20 @@ riesce a raggiungere né il sito pubblicato né Firebase per policy di rete):
    che appaia anche nella lista della Home e che generi il suo QR
 4. Premi "Rimuovi" su un tavolo di test: dopo conferma deve sparire da tabella, Home e QR
 
+## Grafica professionale + matrice di esempio
+
+- Nuovo design system (`src/index.css`): palette navy/blu, card, badge, tabelle, tema chiaro/scuro,
+  applicato a tutte le viste. `Topbar` e `BoardKpi`/`Timer` riutilizzati ovunque
+- `/config` → "Matrice punteggi" → pulsante **"Carica matrice di esempio"**: popola le 12 opzioni con
+  nomi e shift plausibili (`src/lib/matriceEsempio.js`), utile per partire con dati reali invece che
+  tutti a zero. Sovrascrive quanto già presente (con conferma) — resta comunque modificabile riga per
+  riga dopo, i valori sono solo un punto di partenza da rivedere
+
+### Come testare
+
+1. Apri `/regia` e `/tavolo/:id`: verifica lo stile nuovo (card, badge, timer grande)
+2. Su `/config` → "Matrice punteggi" premi "Carica matrice di esempio" (conferma il popup): le 12 righe
+   si devono popolare con nomi e valori Q/S/C/P diversi da zero
+3. Apri un round da `/regia` e invia una scelta da `/tavolo/1`: dovresti vedere il nome dell'opzione
+   scelta e i KPI aggiornarsi coerentemente con i nuovi valori
+
