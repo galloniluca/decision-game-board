@@ -278,3 +278,17 @@ pensata per stare tutta su un solo schermo (niente scroll possibile su una TV).
 4. Ridimensiona la finestra del browser (o prova a schermo intero su un monitor più piccolo): il
    contenuto deve restare leggibile e non uscire dai bordi
 
+## Resa mobile (Tavolo)
+
+`/tavolo/:id` è pensata per essere usata da smartphone/tablet dai giocatori (desktop per te/regia).
+Verificato e sistemato su schermi molto stretti (~320px, i telefoni più piccoli):
+- I badge KPI Q/S/C/P andavano a capo in modo scomposto → ridotti via media query sotto i 420px
+- Il titolo "Round N" si spezzava a metà se i badge accanto non avevano spazio → ora vanno a capo
+  in modo pulito sotto al titolo invece di forzarlo a stringersi
+
+### Come testare
+
+Nel browser apri gli strumenti sviluppatore (F12) → modalità dispositivo mobile → prova `/tavolo/1`
+con larghezze diverse (320px, 375px, 414px): badge, titoli e pulsanti devono restare leggibili e
+allineati senza spezzarsi in modo strano.
+
