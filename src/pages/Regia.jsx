@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { calcolaKpiTavolo } from '../lib/kpi'
-import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
+import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
@@ -86,6 +86,18 @@ function Regia() {
     setAzioneInCorso(false)
   }
 
+  async function toggleRisultati() {
+    setAzioneInCorso(true)
+    try {
+      await updateDoc(doc(db, 'sessione', 'corrente'), {
+        mostra_risultati: !sessione.mostra_risultati,
+      })
+    } catch (err) {
+      setErrore(err.message)
+    }
+    setAzioneInCorso(false)
+  }
+
   async function avanzaRound() {
     setAzioneInCorso(true)
     try {
@@ -117,7 +129,7 @@ function Regia() {
   scelteTutte
     .filter((s) => s.round === round)
     .forEach((s) => {
-      inviatiPerTavolo[s.tavolo_id] = true
+      inviatiPerTavolo[s.tavolo_id] = s
     })
   const numInviati = Object.keys(inviatiPerTavolo).length
 
@@ -128,6 +140,7 @@ function Regia() {
           <span className="nav-links">
             <Link to="/">Home</Link>
             <Link to="/config">Config</Link>
+            <Link to="/dashboard">Dashboard TV</Link>
           </span>
         }
       />
@@ -184,18 +197,42 @@ function Regia() {
         </div>
 
         <div className="card">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
+            <h3 style={{ margin: 0 }}>
+              Dashboard TV — pagina da proiettare, aggiornata in tempo reale
+            </h3>
+            <button type="button" className="btn btn-sm" onClick={toggleRisultati} disabled={azioneInCorso}>
+              {sessione.mostra_risultati ? 'Nascondi risultati sulla dashboard' : 'Mostra risultati sulla dashboard'}
+            </button>
+          </div>
+          <p className="status-muted" style={{ marginTop: '0.5rem' }}>
+            Lo stato di invio dei tavoli è sempre visibile sulla dashboard. I risultati (scelte fatte
+            e board KPI) compaiono solo quando attivi il pulsante qui sopra — utile per un momento di
+            reveal a fine round.
+          </p>
+        </div>
+
+        <div className="card">
           <h3>
             Scelte inviate — {numInviati} su {tavoli.length}
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
-            {tavoli.map((tavolo) => (
-              <span
-                key={tavolo.id}
-                className={`badge-pill ${inviatiPerTavolo[tavolo.id] ? 'aperto' : 'chiuso'}`}
-              >
-                {inviatiPerTavolo[tavolo.id] ? '✓' : '·'} {tavolo.nome}
-              </span>
-            ))}
+            {tavoli.map((tavolo) => {
+              const scelta = inviatiPerTavolo[tavolo.id]
+              return (
+                <span key={tavolo.id} className={`badge-pill ${scelta ? 'aperto' : 'chiuso'}`}>
+                  {scelta ? `✓ ${tavolo.nome} · ${formattaOrario(scelta.inviato_at) ?? '...'}` : `· ${tavolo.nome}`}
+                </span>
+              )
+            })}
           </div>
         </div>
 

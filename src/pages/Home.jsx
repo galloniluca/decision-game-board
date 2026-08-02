@@ -42,6 +42,7 @@ function Home() {
           <span className="nav-links">
             <Link to="/config">Config</Link>
             <Link to="/regia">Regia</Link>
+            <Link to="/dashboard">Dashboard TV</Link>
           </span>
         }
       />

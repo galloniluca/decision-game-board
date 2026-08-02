@@ -42,6 +42,7 @@ export async function assicuraDatiIniziali() {
       stato: 'chiuso',
       timer_avvio: null,
       durata_round_minuti: DURATA_ROUND_MINUTI_DEFAULT,
+      mostra_risultati: false,
     })
     daScrivere = true
   }

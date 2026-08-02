@@ -345,6 +345,43 @@ label {
   font-size: 1.5rem;
 }
 
+.timer.timer-xl {
+  font-size: 7rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.timer.timer-xl.expired {
+  font-size: 3rem;
+}
+
+/* ---- Dashboard (proiezione TV) ---- */
+
+.dashboard-page {
+  font-size: 1.15rem;
+}
+
+.dashboard-page .page-inner {
+  max-width: 1100px;
+}
+
+.dashboard-page h1 {
+  font-size: 2.4rem;
+}
+
+.dashboard-page .badge-pill {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.dashboard-page .kpi-badge {
+  min-width: 4rem;
+  padding: 0.55rem 0.8rem;
+}
+
+.dashboard-page .kpi-badge .kpi-value {
+  font-size: 1.3rem;
+}
+
 /* ---- KPI badges ---- */
 
 .kpi-row {

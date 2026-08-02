@@ -225,3 +225,30 @@ riesce a raggiungere né il sito pubblicato né Firebase per policy di rete):
 3. Apri un round da `/regia` e invia una scelta da `/tavolo/1`: dovresti vedere il nome dell'opzione
    scelta e i KPI aggiornarsi coerentemente con i nuovi valori
 
+## Fix feedback invio + Dashboard TV
+
+Fix bug: sulla vista Tavolo il pulsante restava "Invia scelta" anche dopo un invio riuscito, senza un
+segnale chiaro che fosse andato a buon fine.
+
+- `/tavolo/:id`: badge "✓ Inviata" accanto a "Aperto", segno di spunta sull'opzione già inviata, e il
+  pulsante ora cambia stato: **"✓ Scelta inviata"** (disabilitato) se la selezione corrente coincide con
+  quanto già inviato, **"Aggiorna scelta"** se hai cambiato selezione dopo un invio precedente
+- `/regia`: la lista "Scelte inviate" mostra ora anche l'orario di invio di ciascun tavolo
+- Nuova vista **`/dashboard`**: pensata per una TV/proiettore visibile a tutti i tavoli. Mostra sempre
+  round attivo, timer (grande) e stato di invio di ciascun tavolo (senza rivelare la scelta). Una
+  sezione aggiuntiva con le scelte fatte e la board KPI compare solo quando abilitata
+- `/regia`: nuovo pulsante **"Mostra/Nascondi risultati sulla dashboard"** — controlla in tempo reale
+  (campo `sessione.mostra_risultati`) se la sezione risultati è visibile su `/dashboard`, utile per un
+  momento di reveal a fine round invece di mostrare tutto sempre
+
+### Come testare
+
+1. Su `/tavolo/1` apri un round e invia una scelta: il pulsante deve diventare "✓ Scelta inviata"
+   (disabilitato) e comparire il segno di spunta sull'opzione scelta
+2. Cambia selezione su un'altra opzione: il pulsante deve tornare cliccabile con scritta "Aggiorna scelta"
+3. Su `/regia`, accanto al tavolo che ha inviato, deve comparire l'orario (es. "✓ Tavolo 1 · 14:32:07")
+4. Apri `/dashboard` su un secondo dispositivo/scheda: deve mostrare round, timer grande, e i tavoli
+   che hanno inviato — senza rivelare le scelte
+5. Su `/regia` premi "Mostra risultati sulla dashboard": su `/dashboard`, **senza ricaricare**, deve
+   comparire la sezione con le scelte fatte e la board KPI. Premi di nuovo per nasconderla
+

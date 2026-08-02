@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { formattaMMSS, secondiRimanenti } from '../lib/tempo'
 
-function Timer({ timerAvvio, durataSecondi }) {
+function Timer({ timerAvvio, durataSecondi, large }) {
   const [rimanenti, setRimanenti] = useState(() => secondiRimanenti(timerAvvio, durataSecondi))
 
   useEffect(() => {
@@ -15,12 +15,9 @@ function Timer({ timerAvvio, durataSecondi }) {
   if (rimanenti === null) return null
 
   const scaduto = rimanenti <= 0
+  const classi = ['timer', large && 'timer-xl', scaduto && 'expired'].filter(Boolean).join(' ')
 
-  return (
-    <p className={scaduto ? 'timer expired' : 'timer'}>
-      {scaduto ? 'Tempo scaduto' : formattaMMSS(rimanenti)}
-    </p>
-  )
+  return <p className={classi}>{scaduto ? 'Tempo scaduto' : formattaMMSS(rimanenti)}</p>
 }
 
 export default Timer

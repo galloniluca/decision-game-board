@@ -144,6 +144,14 @@ function Tavolo() {
   const roundChiuso = sessione.stato !== 'aperto'
   const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
   const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap)
+  const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
+  const testoBottone = invioStato === 'invio'
+    ? 'Invio in corso...'
+    : corrispondeAllInviata
+      ? '✓ Scelta inviata'
+      : inviataPerRoundAttivo
+        ? 'Aggiorna scelta'
+        : 'Invia scelta'
 
   return (
     <div className="page">
@@ -176,7 +184,10 @@ function Tavolo() {
               }}
             >
               <h2 style={{ margin: 0 }}>Round {round}</h2>
-              <span className="badge-pill aperto">Aperto</span>
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                {inviataPerRoundAttivo && <span className="badge-pill aperto">✓ Inviata</span>}
+                <span className="badge-pill aperto">Aperto</span>
+              </div>
             </div>
 
             <Timer
@@ -186,8 +197,8 @@ function Tavolo() {
 
             {inviataPerRoundAttivo && (
               <p className="status-muted">
-                Hai già inviato: <strong>Opzione {inviataPerRoundAttivo}</strong>. Puoi cambiare
-                scelta e inviare di nuovo finché il round resta aperto.
+                Hai inviato: <strong>Opzione {inviataPerRoundAttivo}</strong>. Puoi cambiare scelta e
+                inviare di nuovo finché il round resta aperto.
               </p>
             )}
 
@@ -203,7 +214,8 @@ function Tavolo() {
                     className={`option-btn${selezionataAttiva ? ' selected' : ''}`}
                   >
                     <span className="option-letter">{lettera}</span>
-                    <span>{opzione?.nome || `Opzione ${lettera}`}</span>
+                    <span style={{ flex: 1 }}>{opzione?.nome || `Opzione ${lettera}`}</span>
+                    {lettera === inviataPerRoundAttivo && <span aria-hidden="true">✓</span>}
                   </button>
                 )
               })}
@@ -213,10 +225,10 @@ function Tavolo() {
               type="button"
               className="btn btn-primary"
               onClick={inviaScelta}
-              disabled={!selezionata || invioStato === 'invio'}
+              disabled={!selezionata || invioStato === 'invio' || corrispondeAllInviata}
               style={{ width: '100%' }}
             >
-              {invioStato === 'invio' ? 'Invio in corso...' : 'Invia scelta'}
+              {testoBottone}
             </button>
           </div>
         )}

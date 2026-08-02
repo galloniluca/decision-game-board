@@ -12,3 +12,9 @@ export function formattaMMSS(secondi) {
   const s = secondi % 60
   return `${m}:${String(s).padStart(2, '0')}`
 }
+
+export function formattaOrario(timestamp) {
+  if (!timestamp) return null
+  const ms = timestamp.toMillis ? timestamp.toMillis() : new Date(timestamp).getTime()
+  return new Date(ms).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
