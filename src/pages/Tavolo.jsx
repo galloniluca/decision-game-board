@@ -180,11 +180,13 @@ function Tavolo() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.4rem',
                 marginBottom: '0.25rem',
               }}
             >
               <h2 style={{ margin: 0 }}>Round {round}</h2>
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                 {inviataPerRoundAttivo && <span className="badge-pill aperto">✓ Inviata</span>}
                 <span className="badge-pill aperto">Aperto</span>
               </div>

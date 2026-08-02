@@ -66,6 +66,12 @@ h1 {
   letter-spacing: -0.02em;
 }
 
+@media (max-width: 420px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+
 h2 {
   font-size: 1.3rem;
   letter-spacing: -0.01em;
@@ -547,6 +553,21 @@ label {
   letter-spacing: 0.04em;
   opacity: 0.85;
   font-weight: 600;
+}
+
+@media (max-width: 420px) {
+  .kpi-badge {
+    min-width: 2.7rem;
+    padding: 0.35rem 0.4rem;
+  }
+
+  .kpi-row {
+    gap: 0.35rem;
+  }
+
+  .card {
+    padding: 1.1rem;
+  }
 }
 
 .kpi-badge .kpi-value {

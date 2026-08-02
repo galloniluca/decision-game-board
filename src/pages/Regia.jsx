@@ -155,6 +155,8 @@ function Regia() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.4rem',
               marginBottom: '0.25rem',
             }}
           >
