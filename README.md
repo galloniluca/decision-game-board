@@ -252,3 +252,29 @@ segnale chiaro che fosse andato a buon fine.
 5. Su `/regia` premi "Mostra risultati sulla dashboard": su `/dashboard`, **senza ricaricare**, deve
    comparire la sezione con le scelte fatte e la board KPI. Premi di nuovo per nasconderla
 
+## Dashboard TV: griglia a schede per tavolo
+
+Riprogettata su richiesta: invece di due tabelle, una scheda per tavolo con lo storico dei round,
+pensata per stare tutta su un solo schermo (niente scroll possibile su una TV).
+
+- `src/pages/Dashboard.jsx` + `src/components/TavoloScheda.jsx` + `src/components/MiniSemaforo.jsx`
+- Fascia superiore compatta, sempre visibile: round, timer, quanti tavoli hanno inviato
+- Quando "Mostra risultati" è attivo: una scheda per tavolo con
+  - riga R1-R4: l'opzione scelta in ogni round, con sotto 4 puntini colorati (semaforo Q/S/C/P
+    cumulativo *a quel punto*, per vedere lo storico round su round, non solo il totale finale)
+  - in basso, i 4 badge KPI grandi con il totale aggiornato ad oggi
+- Griglia 3 colonne × 2 righe per 5-6 tavoli (si adatta automaticamente al numero di tavoli configurato
+  in Config); tutto dimensionato con unità relative al viewport così si adatta a schermi diversi senza
+  andare in scroll né uscire dai bordi
+- `src/index.css` → nuove classi `.dashboard-tv`, `.dash-card`, `.dash-round-chip`, `.mini-semaforo`
+
+### Come testare
+
+1. Apri `/dashboard` su un secondo schermo/scheda a tutta finestra (F11 per il fullscreen del browser
+   simula meglio l'uso reale su TV)
+2. Gioca un paio di round da `/regia` + `/tavolo/:id`, poi attiva "Mostra risultati sulla dashboard"
+3. Verifica che compaiano le 6 schede, tutte visibili senza dover scrollare, con i round già giocati
+   che mostrano lettera scelta + puntini colorati, e i round non ancora giocati con "–"
+4. Ridimensiona la finestra del browser (o prova a schermo intero su un monitor più piccolo): il
+   contenuto deve restare leggibile e non uscire dai bordi
+

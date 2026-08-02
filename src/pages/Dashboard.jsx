@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { idOpzione } from '../lib/costanti'
-import { calcolaKpiTavolo } from '../lib/kpi'
-import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
-import Timer from '../components/Timer'
-import BoardKpi from '../components/BoardKpi'
-import Topbar from '../components/Topbar'
+import { DURATA_ROUND_MINUTI_DEFAULT, formattaMMSS, secondiRimanenti } from '../lib/tempo'
+import TavoloScheda from '../components/TavoloScheda'
 
 function Dashboard() {
   const [caricamento, setCaricamento] = useState(true)
@@ -15,6 +11,7 @@ function Dashboard() {
   const [tavoli, setTavoli] = useState([])
   const [opzioniMap, setOpzioniMap] = useState({})
   const [scelteTutte, setScelteTutte] = useState([])
+  const [, forceTick] = useState(0)
 
   // Tavoli e matrice opzioni: caricati una volta (non cambiano durante l'evento).
   useEffect(() => {
@@ -59,13 +56,16 @@ function Dashboard() {
     }
   }, [])
 
+  // Tick ogni secondo solo per aggiornare il countdown testuale in alto.
+  useEffect(() => {
+    const interval = setInterval(() => forceTick((n) => n + 1), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   if (caricamento) {
     return (
-      <div className="page dashboard-page">
-        <Topbar />
-        <div className="page-inner">
-          <p className="status-muted">Caricamento...</p>
-        </div>
+      <div className="dashboard-tv">
+        <p className="status-muted">Caricamento...</p>
       </div>
     )
   }
@@ -73,48 +73,40 @@ function Dashboard() {
   const round = sessione.round_attivo
   const aperto = sessione.stato === 'aperto'
   const mostraRisultati = Boolean(sessione.mostra_risultati)
+  const durataSecondi = (sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60
+  const rimanenti = aperto ? secondiRimanenti(sessione.timer_avvio, durataSecondi) : null
 
   const inviatiPerTavolo = {}
   scelteTutte
     .filter((s) => s.round === round)
     .forEach((s) => {
-      inviatiPerTavolo[s.tavolo_id] = s
+      inviatiPerTavolo[s.tavolo_id] = true
     })
   const numInviati = Object.keys(inviatiPerTavolo).length
 
+  const colonne = tavoli.length <= 4 ? 2 : 3
+  const righe = Math.ceil(tavoli.length / colonne) || 1
+
   return (
-    <div className="page dashboard-page">
-      <Topbar />
-      <div className="page-inner">
-        {errore && <p className="status-error">❌ {errore}</p>}
-
-        <div className="card">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '0.25rem',
-            }}
-          >
-            <h1 style={{ margin: 0 }}>Round {round}</h1>
-            <span className={`badge-pill ${aperto ? 'aperto' : 'chiuso'}`}>
-              {aperto ? 'Aperto' : 'Chiuso'}
+    <div className="dashboard-tv">
+      <div className="dashboard-tv__header">
+        <span className="brand">
+          <span className="brand-mark" />
+          Lean Trade-off Game
+        </span>
+        <div className="dashboard-tv__status">
+          <span>
+            Round {round} — {aperto ? 'Aperto' : 'Chiuso'}
+          </span>
+          {rimanenti !== null && (
+            <span className={`dashboard-tv__timer${rimanenti <= 0 ? ' expired' : ''}`}>
+              {rimanenti <= 0 ? 'Tempo scaduto' : formattaMMSS(rimanenti)}
             </span>
-          </div>
-
-          {aperto && (
-            <Timer
-              timerAvvio={sessione.timer_avvio}
-              durataSecondi={(sessione.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT) * 60}
-              large
-            />
           )}
-
-          <h3>
-            Scelte inviate — {numInviati} su {tavoli.length}
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
+          <span>
+            {numInviati}/{tavoli.length} inviate
+          </span>
+          <div className="dashboard-tv__pills">
             {tavoli.map((tavolo) => (
               <span
                 key={tavolo.id}
@@ -125,60 +117,28 @@ function Dashboard() {
             ))}
           </div>
         </div>
-
-        {mostraRisultati && (
-          <div className="card">
-            <h3>Risultati Round {round}</h3>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Tavolo</th>
-                  <th>Scelta</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tavoli.map((tavolo) => {
-                  const scelta = inviatiPerTavolo[tavolo.id]
-                  const opzione = scelta ? opzioniMap[idOpzione(round, scelta.opzione)] : null
-                  return (
-                    <tr key={tavolo.id}>
-                      <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{tavolo.nome}</td>
-                      <td>
-                        {scelta ? (
-                          <>
-                            <strong>{scelta.opzione}</strong>
-                            {opzione?.nome ? ` — ${opzione.nome}` : ''}
-                          </>
-                        ) : (
-                          <span className="status-muted">Nessuna scelta inviata</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-
-            <h3 style={{ marginTop: '1.5rem' }}>Board KPI</h3>
-            <table className="table">
-              <tbody>
-                {tavoli.map((tavolo) => {
-                  const scelteTavolo = scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))
-                  const totali = calcolaKpiTavolo(scelteTavolo, opzioniMap)
-                  return (
-                    <tr key={tavolo.id}>
-                      <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{tavolo.nome}</td>
-                      <td>
-                        <BoardKpi totali={totali} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
+
+      {errore && <p className="status-error">❌ {errore}</p>}
+
+      {mostraRisultati && (
+        <div
+          className="dashboard-tv__grid"
+          style={{
+            gridTemplateColumns: `repeat(${colonne}, 1fr)`,
+            gridTemplateRows: `repeat(${righe}, 1fr)`,
+          }}
+        >
+          {tavoli.map((tavolo) => (
+            <TavoloScheda
+              key={tavolo.id}
+              tavolo={tavolo}
+              scelteTavolo={scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))}
+              opzioniMap={opzioniMap}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
