@@ -22,10 +22,11 @@ import Topbar from '../components/Topbar'
 function Tavolo() {
   const { id } = useParams()
 
-  const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState(null)
   const [tavolo, setTavolo] = useState(null)
+  const [tavoloPronto, setTavoloPronto] = useState(false)
   const [sessione, setSessione] = useState(null)
+  const [sessionePronta, setSessionePronta] = useState(false)
   const [opzioniMap, setOpzioniMap] = useState({})
   const [scelteTavolo, setScelteTavolo] = useState([])
   const [selezionata, setSelezionata] = useState(null)
@@ -33,20 +34,23 @@ function Tavolo() {
 
   useEffect(() => {
     let annullato = false
-    setCaricamento(true)
     setErrore(null)
+    setTavolo(null)
+    setTavoloPronto(false)
+    setSessione(null)
+    setSessionePronta(false)
 
     getDoc(doc(db, 'tavoli', id))
       .then((snap) => {
         if (annullato) return
         if (!snap.exists()) {
           setErrore(`Tavolo "${id}" non trovato.`)
-          setCaricamento(false)
-          return
+        } else {
+          setTavolo(snap.data())
         }
-        setTavolo(snap.data())
       })
       .catch((err) => !annullato && setErrore(err.message))
+      .finally(() => !annullato && setTavoloPronto(true))
 
     getDocs(collection(db, 'opzioni'))
       .then((snap) => {
@@ -63,9 +67,12 @@ function Tavolo() {
       doc(db, 'sessione', 'corrente'),
       (snap) => {
         setSessione(snap.data({ serverTimestamps: 'estimate' }))
-        setCaricamento(false)
+        setSessionePronta(true)
       },
-      (err) => setErrore(err.message)
+      (err) => {
+        setErrore(err.message)
+        setSessionePronta(true)
+      }
     )
 
     const unsubScelte = onSnapshot(
@@ -109,7 +116,7 @@ function Tavolo() {
     }
   }
 
-  if (caricamento) {
+  if (!tavoloPronto || !sessionePronta) {
     return (
       <div className="page">
         <Topbar />
@@ -120,12 +127,14 @@ function Tavolo() {
     )
   }
 
-  if (errore && !tavolo) {
+  if (!tavolo || !sessione) {
     return (
       <div className="page">
         <Topbar />
         <div className="page-inner">
-          <p className="status-error">❌ {errore}</p>
+          <p className="status-error">
+            ❌ {errore ?? (!tavolo ? `Tavolo "${id}" non trovato.` : 'Sessione non disponibile.')}
+          </p>
         </div>
       </div>
     )
