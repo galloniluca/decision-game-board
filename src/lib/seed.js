@@ -2,6 +2,7 @@ import { collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore
 import { db } from './firebaseClient'
 import { LETTERE, NUM_TAVOLI, ROUNDS, idOpzione } from './costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from './tempo'
+import { KPI_BASE_DEFAULT } from './kpi'
 
 // Popola i dati di base al primo avvio (nessuno script da eseguire a mano).
 export async function assicuraDatiIniziali() {
@@ -43,6 +44,7 @@ export async function assicuraDatiIniziali() {
       timer_avvio: null,
       durata_round_minuti: DURATA_ROUND_MINUTI_DEFAULT,
       mostra_risultati: false,
+      kpi_baseline: KPI_BASE_DEFAULT,
     })
     daScrivere = true
   }

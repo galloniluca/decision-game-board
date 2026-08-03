@@ -13,6 +13,7 @@ import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
+import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { MATRICE_UFFICIALE } from '../lib/matriceUfficiale'
 import { eseguiResetPartita } from '../lib/resetPartita'
 import Topbar from '../components/Topbar'
@@ -27,6 +28,8 @@ function Config() {
   const [qrPerTavolo, setQrPerTavolo] = useState({})
   const [durataMinuti, setDurataMinuti] = useState(DURATA_ROUND_MINUTI_DEFAULT)
   const [durataStato, setDurataStato] = useState(null)
+  const [kpiBaseline, setKpiBaseline] = useState(KPI_BASE_DEFAULT)
+  const [kpiBaselineStato, setKpiBaselineStato] = useState(null)
 
   useEffect(() => {
     caricaDati()
@@ -67,6 +70,7 @@ function Config() {
       setTavoli(listaTavoli)
 
       setDurataMinuti(sessioneSnap.data()?.durata_round_minuti ?? DURATA_ROUND_MINUTI_DEFAULT)
+      setKpiBaseline(sessioneSnap.data()?.kpi_baseline ?? KPI_BASE_DEFAULT)
     } catch (err) {
       setErrore(err.message)
     }
@@ -120,7 +124,7 @@ function Config() {
 
   async function caricaMatriceUfficiale() {
     const confermato = window.confirm(
-      'Sovrascrivere la matrice punteggi attuale con i valori ufficiali (V1.7)? Potrai comunque modificarla riga per riga dopo.'
+      'Sovrascrivere la matrice punteggi attuale con i valori ufficiali? Potrai comunque modificarla riga per riga dopo.'
     )
     if (!confermato) return
 
@@ -146,6 +150,17 @@ function Config() {
       setDurataStato('salvato')
     } catch (err) {
       setDurataStato(`errore: ${err.message}`)
+    }
+  }
+
+  async function salvaKpiBaseline(valore) {
+    setKpiBaseline(valore)
+    setKpiBaselineStato('salvataggio')
+    try {
+      await updateDoc(doc(db, 'sessione', 'corrente'), { kpi_baseline: valore })
+      setKpiBaselineStato('salvato')
+    } catch (err) {
+      setKpiBaselineStato(`errore: ${err.message}`)
     }
   }
 
@@ -249,6 +264,30 @@ function Config() {
         </div>
 
         <div className="card">
+          <h3>Baseline KPI iniziale</h3>
+          <p className="status-muted" style={{ marginTop: '0.25rem' }}>
+            Valore da cui partono tutti i KPI a inizio partita, prima di qualsiasi scelta.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className={kpiBaseline === 0 ? 'btn btn-primary' : 'btn'}
+              onClick={() => salvaKpiBaseline(0)}
+            >
+              0 — si parte da giallo
+            </button>
+            <button
+              type="button"
+              className={kpiBaseline === 1 ? 'btn btn-primary' : 'btn'}
+              onClick={() => salvaKpiBaseline(1)}
+            >
+              1 — si parte da verde
+            </button>
+            <span className="status-muted">{kpiBaselineStato}</span>
+          </div>
+        </div>
+
+        <div className="card">
           <div
             style={{
               display: 'flex',
@@ -260,7 +299,7 @@ function Config() {
           >
             <h3 style={{ margin: 0 }}>Matrice punteggi</h3>
             <button type="button" className="btn btn-sm" onClick={caricaMatriceUfficiale}>
-              Carica matrice ufficiale (V1.7)
+              Carica matrice ufficiale
             </button>
           </div>
           <div style={{ overflowX: 'auto', marginTop: '0.75rem' }}>

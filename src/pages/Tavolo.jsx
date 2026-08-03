@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
-import { calcolaKpiTavolo } from '../lib/kpi'
+import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
@@ -144,7 +144,8 @@ function Tavolo() {
   const round = sessione.round_attivo
   const roundChiuso = sessione.stato !== 'aperto'
   const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
-  const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap)
+  const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
+  const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap, kpiBaseline)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -184,7 +185,8 @@ function Tavolo() {
                   const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
                   const totaliFinoQui = calcolaKpiTavolo(
                     scelteTavolo.filter((s) => s.round <= r),
-                    opzioniMap
+                    opzioniMap,
+                    kpiBaseline
                   )
                   return (
                     <tr key={r}>

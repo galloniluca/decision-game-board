@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaMMSS, secondiRimanenti } from '../lib/tempo'
+import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import TavoloScheda from '../components/TavoloScheda'
 
@@ -116,6 +117,7 @@ function Dashboard() {
               tavolo={tavolo}
               scelteTavolo={scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))}
               opzioniMap={opzioniMap}
+              kpiBaseline={sessione.kpi_baseline ?? KPI_BASE_DEFAULT}
             />
           ))}
         </div>

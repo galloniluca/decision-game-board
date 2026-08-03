@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { calcolaKpiTavolo } from '../lib/kpi'
+import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import { eseguiResetPartita } from '../lib/resetPartita'
@@ -142,6 +142,7 @@ function Regia() {
 
   const round = sessione.round_attivo
   const aperto = sessione.stato === 'aperto'
+  const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
 
   const inviatiPerTavolo = {}
   scelteTutte
@@ -270,7 +271,7 @@ function Regia() {
             <tbody>
               {tavoli.map((tavolo) => {
                 const scelteTavolo = scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))
-                const totali = calcolaKpiTavolo(scelteTavolo, opzioniMap)
+                const totali = calcolaKpiTavolo(scelteTavolo, opzioniMap, kpiBaseline)
                 return (
                   <tr key={tavolo.id}>
                     <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{tavolo.nome}</td>

@@ -1,15 +1,15 @@
 import { ROUNDS } from '../lib/costanti'
-import { calcolaKpiTavolo } from '../lib/kpi'
+import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import MiniSemaforo from './MiniSemaforo'
 import BoardKpi from './BoardKpi'
 
-function TavoloScheda({ tavolo, scelteTavolo, opzioniMap }) {
+function TavoloScheda({ tavolo, scelteTavolo, opzioniMap, kpiBaseline = KPI_BASE_DEFAULT }) {
   const sceltePerRound = {}
   scelteTavolo.forEach((s) => {
     sceltePerRound[s.round] = s
   })
 
-  const totaliCorrenti = calcolaKpiTavolo(scelteTavolo, opzioniMap)
+  const totaliCorrenti = calcolaKpiTavolo(scelteTavolo, opzioniMap, kpiBaseline)
 
   return (
     <div className="dash-card">
@@ -20,7 +20,8 @@ function TavoloScheda({ tavolo, scelteTavolo, opzioniMap }) {
           const scelta = sceltePerRound[r]
           const totaliFinoQui = calcolaKpiTavolo(
             scelteTavolo.filter((s) => s.round <= r),
-            opzioniMap
+            opzioniMap,
+            kpiBaseline
           )
           return (
             <div key={r} className="dash-round-chip">

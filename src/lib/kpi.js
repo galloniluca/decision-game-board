@@ -3,11 +3,11 @@ import { idOpzione } from './costanti'
 export const KPI_CHIAVI = ['Q', 'S', 'C', 'P']
 const CAMPO_SHIFT = { Q: 'shift_q', S: 'shift_s', C: 'shift_c', P: 'shift_p' }
 
-// Ogni KPI parte da 1 (non 0) a inizio partita, comune a tutti i tavoli.
-const KPI_BASE = 1
+// Baseline configurabile da /config (sessione.kpi_baseline): 0 (si parte da giallo) o 1 (da verde).
+export const KPI_BASE_DEFAULT = 0
 
-export function calcolaKpiTavolo(scelte, opzioniMap) {
-  const totali = { Q: KPI_BASE, S: KPI_BASE, C: KPI_BASE, P: KPI_BASE }
+export function calcolaKpiTavolo(scelte, opzioniMap, base = KPI_BASE_DEFAULT) {
+  const totali = { Q: base, S: base, C: base, P: base }
   for (const scelta of scelte) {
     const opzione = opzioniMap[idOpzione(scelta.round, scelta.opzione)]
     if (!opzione) continue
