@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaMMSS, secondiRimanenti } from '../lib/tempo'
+import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import TavoloScheda from '../components/TavoloScheda'
 
 function Dashboard() {
@@ -96,7 +97,7 @@ function Dashboard() {
         </span>
         <div className="dashboard-tv__status">
           <span>
-            Round {round} — {aperto ? 'Aperto' : 'Chiuso'}
+            Round {round}: {ROUND_NOMI[round]} — {aperto ? 'Aperto' : 'Chiuso'}
           </span>
           {rimanenti !== null && (
             <span className={`dashboard-tv__timer${rimanenti <= 0 ? ' expired' : ''}`}>

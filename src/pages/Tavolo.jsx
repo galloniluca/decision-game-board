@@ -15,6 +15,7 @@ import { db } from '../lib/firebaseClient'
 import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
 import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
+import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
@@ -168,7 +169,9 @@ function Tavolo() {
 
         {roundChiuso ? (
           <div className="card">
-            <span className="badge-pill chiuso">Round {round} · Chiuso</span>
+            <span className="badge-pill chiuso">
+              Round {round} · {ROUND_NOMI[round]} · Chiuso
+            </span>
             <p className="status-muted" style={{ marginTop: '0.75rem' }}>
               In attesa che la regia apra il round...
             </p>
@@ -185,7 +188,9 @@ function Tavolo() {
                 marginBottom: '0.25rem',
               }}
             >
-              <h2 style={{ margin: 0 }}>Round {round}</h2>
+              <h2 style={{ margin: 0 }}>
+                Round {round} — {ROUND_NOMI[round]}
+              </h2>
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                 {inviataPerRoundAttivo && <span className="badge-pill aperto">✓ Inviata</span>}
                 <span className="badge-pill aperto">Aperto</span>

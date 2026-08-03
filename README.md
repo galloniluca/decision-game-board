@@ -292,3 +292,31 @@ Nel browser apri gli strumenti sviluppatore (F12) → modalità dispositivo mobi
 con larghezze diverse (320px, 375px, 414px): badge, titoli e pulsanti devono restare leggibili e
 allineati senza spezzarsi in modo strano.
 
+## Matrice ufficiale V1.7 + fix baseline KPI
+
+Sostituita la matrice di esempio (inventata) con i valori reali forniti (Tabella Punteggi Lean
+Trade-off Game V1.7): nomi round ("Cliente imprevedibile", "Collo di bottiglia", "Shock esterno",
+"Pressione sui costi") e i 12 shift ufficiali con i nomi opzione reali (Standardizzazione,
+Flessibilità, Pianificazione, Specializzazione, Polivalenza, Outsourcing, JIT, Buffer,
+Diversificazione, Kaizen, VSM, Marketing).
+
+**Fix importante**: i KPI partono da **1,1,1,1** (non da 0 come avevo assunto prima), poi si sommano
+gli shift round su round. Corretto in `calcolaKpiTavolo` (`src/lib/kpi.js`, costante `KPI_BASE = 1`).
+Verificato simulando tutti gli 81 percorsi possibili (3⁴): con baseline 1 e soglie ≥1 verde / =0
+giallo / ≤-1 rosso, il risultato è 8 verde / 45 giallo / 25 rosso / 3 collasso — identico alla
+distribuzione dichiarata nel documento ufficiale, quindi l'interpretazione è confermata corretta.
+
+- `/config` → pulsante rinominato in **"Carica matrice ufficiale (V1.7)"**
+- `/tavolo/:id`, `/regia`, `/dashboard` → l'intestazione del round mostra ora anche il nome
+  narrativo (es. "Round 1 — Cliente imprevedibile")
+
+### Come testare
+
+1. Su `/config` premi "Carica matrice ufficiale (V1.7)" (conferma il popup)
+2. Verifica che le 12 righe abbiano i nomi ufficiali e gli shift corretti (confrontabili con la
+   tabella fornita)
+3. Prima di scegliere qualsiasi opzione, i KPI su `/tavolo/:id` devono partire da **1/1/1/1** (tutti
+   verdi, non gialli) — se vedi 0/0/0/0 il fix non è stato applicato
+4. Gioca un round e verifica che i KPI finali corrispondano all'esempio del documento (Round 1,
+   scelta A → Q:2 S:0 C:0 P:1)
+

@@ -4,6 +4,7 @@ import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from
 import { db } from '../lib/firebaseClient'
 import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
+import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
@@ -160,7 +161,9 @@ function Regia() {
               marginBottom: '0.25rem',
             }}
           >
-            <h2 style={{ margin: 0 }}>Round {round}</h2>
+            <h2 style={{ margin: 0 }}>
+              Round {round} — {ROUND_NOMI[round]}
+            </h2>
             <span className={`badge-pill ${aperto ? 'aperto' : 'chiuso'}`}>
               {aperto ? 'Aperto' : 'Chiuso'}
             </span>

@@ -13,7 +13,7 @@ import QRCode from 'qrcode'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
-import { MATRICE_ESEMPIO } from '../lib/matriceEsempio'
+import { MATRICE_UFFICIALE } from '../lib/matriceUfficiale'
 import Topbar from '../components/Topbar'
 
 function Config() {
@@ -117,9 +117,9 @@ function Config() {
     }
   }
 
-  async function caricaMatriceEsempio() {
+  async function caricaMatriceUfficiale() {
     const confermato = window.confirm(
-      'Sovrascrivere la matrice punteggi attuale con i valori di esempio? Potrai comunque modificarla riga per riga dopo.'
+      'Sovrascrivere la matrice punteggi attuale con i valori ufficiali (V1.7)? Potrai comunque modificarla riga per riga dopo.'
     )
     if (!confermato) return
 
@@ -128,7 +128,7 @@ function Config() {
       const batch = writeBatch(db)
       for (const round of ROUNDS) {
         for (const opzione of LETTERE) {
-          batch.update(doc(db, 'opzioni', idOpzione(round, opzione)), MATRICE_ESEMPIO[round][opzione])
+          batch.update(doc(db, 'opzioni', idOpzione(round, opzione)), MATRICE_UFFICIALE[round][opzione])
         }
       }
       await batch.commit()
@@ -268,8 +268,8 @@ function Config() {
             }}
           >
             <h3 style={{ margin: 0 }}>Matrice punteggi</h3>
-            <button type="button" className="btn btn-sm" onClick={caricaMatriceEsempio}>
-              Carica matrice di esempio
+            <button type="button" className="btn btn-sm" onClick={caricaMatriceUfficiale}>
+              Carica matrice ufficiale (V1.7)
             </button>
           </div>
           <div style={{ overflowX: 'auto', marginTop: '0.75rem' }}>
