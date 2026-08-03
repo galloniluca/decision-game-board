@@ -14,6 +14,7 @@ import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, SHIFT_VALORI, idOpzione, idScelta } from '../lib/costanti'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { MATRICE_UFFICIALE } from '../lib/matriceUfficiale'
+import { eseguiResetPartita } from '../lib/resetPartita'
 import Topbar from '../components/Topbar'
 
 function Config() {
@@ -191,17 +192,7 @@ function Config() {
     setErrore(null)
 
     try {
-      const scelteSnap = await getDocs(collection(db, 'scelte'))
-      const batch = writeBatch(db)
-      scelteSnap.forEach((d) => batch.delete(d.ref))
-      await batch.commit()
-
-      await setDoc(doc(db, 'sessione', 'corrente'), {
-        round_attivo: 1,
-        stato: 'chiuso',
-        timer_avvio: null,
-      })
-
+      await eseguiResetPartita()
       window.alert('Partita resettata.')
     } catch (err) {
       setErrore(err.message)

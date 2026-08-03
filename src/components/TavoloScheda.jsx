@@ -33,7 +33,7 @@ function TavoloScheda({ tavolo, scelteTavolo, opzioniMap }) {
       </div>
 
       <div className="dash-card__kpi">
-        <BoardKpi totali={totaliCorrenti} />
+        <BoardKpi totali={totaliCorrenti} mostraValore={false} />
       </div>
     </div>
   )

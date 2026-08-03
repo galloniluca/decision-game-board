@@ -164,7 +164,7 @@ function Tavolo() {
 
         <div className="card">
           <h3>I tuoi KPI</h3>
-          <BoardKpi totali={totaliKpi} />
+          <BoardKpi totali={totaliKpi} mostraValore={false} />
         </div>
 
         <div className="card">
@@ -199,7 +199,7 @@ function Tavolo() {
                           <span className="status-muted">–</span>
                         )}
                       </td>
-                      <td>{scelta && <BoardKpi totali={totaliFinoQui} />}</td>
+                      <td>{scelta && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}</td>
                     </tr>
                   )
                 })}

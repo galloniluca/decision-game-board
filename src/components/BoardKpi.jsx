@@ -1,6 +1,6 @@
 import { KPI_CHIAVI, semaforo } from '../lib/kpi'
 
-function BoardKpi({ totali }) {
+function BoardKpi({ totali, mostraValore = true }) {
   return (
     <div className="kpi-row">
       {KPI_CHIAVI.map((kpi) => {
@@ -9,7 +9,9 @@ function BoardKpi({ totali }) {
         return (
           <div key={kpi} className={`kpi-badge kpi-${stato}`}>
             <span className="kpi-label">{kpi}</span>
-            <span className="kpi-value">{valore > 0 ? `+${valore}` : valore}</span>
+            {mostraValore && (
+              <span className="kpi-value">{valore > 0 ? `+${valore}` : valore}</span>
+            )}
           </div>
         )
       })}

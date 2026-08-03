@@ -5,6 +5,7 @@ import { db } from '../lib/firebaseClient'
 import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
+import { eseguiResetPartita } from '../lib/resetPartita'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
@@ -93,6 +94,22 @@ function Regia() {
       await updateDoc(doc(db, 'sessione', 'corrente'), {
         mostra_risultati: !sessione.mostra_risultati,
       })
+    } catch (err) {
+      setErrore(err.message)
+    }
+    setAzioneInCorso(false)
+  }
+
+  async function resetPartita() {
+    const confermato = window.confirm(
+      'Reset partita: verranno cancellate tutte le scelte inviate e la sessione tornerà al Round 1 (chiuso). Continuare?'
+    )
+    if (!confermato) return
+
+    setAzioneInCorso(true)
+    try {
+      await eseguiResetPartita()
+      window.alert('Partita resettata.')
     } catch (err) {
       setErrore(err.message)
     }
@@ -199,6 +216,12 @@ function Regia() {
               Round 4 chiuso: fine partita. Ecco la board finale per il debrief.
             </p>
           )}
+
+          <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+            <button type="button" className="btn btn-danger btn-sm" onClick={resetPartita} disabled={azioneInCorso}>
+              Reset partita
+            </button>
+          </div>
         </div>
 
         <div className="card">
