@@ -320,3 +320,26 @@ distribuzione dichiarata nel documento ufficiale, quindi l'interpretazione è co
 4. Gioca un round e verifica che i KPI finali corrispondano all'esempio del documento (Round 1,
    scelta A → Q:2 S:0 C:0 P:1)
 
+## Storico su Tavolo + Dashboard "live" più evidente
+
+- `/tavolo/:id`: nuova card **"Storico decisioni"** — tabella Round 1-4 con l'opzione scelta e i KPI
+  (badge pieni, non solo puntini) subito dopo quel round, per vedere l'evoluzione round su round sul
+  proprio dispositivo, non solo il totale attuale
+- `/dashboard`: quando il round è **aperto e i risultati non sono in reveal**, la schermata ora mostra
+  un timer enorme al centro e un tavolo per ciascuna squadra che **diventa verde pieno** non appena
+  invia la scelta (prima erano piccoli pallini poco visibili da lontano) — pensato per essere letto
+  a colpo d'occhio da tutta la sala
+- La griglia con lo storico completo (Step precedente) resta invariata e compare solo quando attivi
+  "Mostra risultati sulla dashboard" da `/regia`
+
+### Come testare
+
+1. Su `/tavolo/1` gioca un paio di round: la card "Storico decisioni" deve popolarsi riga per riga
+   con l'opzione scelta e i KPI di quel momento, mentre i round futuri restano con "–"
+2. Apri `/dashboard`, apri un round da `/regia`: deve comparire subito un timer enorme al centro e i
+   tavoli in fila sotto, tutti grigi
+3. Invia una scelta da `/tavolo/1`: la tile "Tavolo 1" sulla dashboard deve diventare verde piena
+   **senza ricaricare**
+4. Chiudi il round da `/regia`: la dashboard deve mostrare "In attesa che la regia apra il round..."
+   finché non ne apri uno nuovo (a meno che "Mostra risultati" non sia già attivo)
+

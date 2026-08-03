@@ -95,34 +95,14 @@ function Dashboard() {
           <span className="brand-mark" />
           Lean Trade-off Game
         </span>
-        <div className="dashboard-tv__status">
-          <span>
-            Round {round}: {ROUND_NOMI[round]} — {aperto ? 'Aperto' : 'Chiuso'}
-          </span>
-          {rimanenti !== null && (
-            <span className={`dashboard-tv__timer${rimanenti <= 0 ? ' expired' : ''}`}>
-              {rimanenti <= 0 ? 'Tempo scaduto' : formattaMMSS(rimanenti)}
-            </span>
-          )}
-          <span>
-            {numInviati}/{tavoli.length} inviate
-          </span>
-          <div className="dashboard-tv__pills">
-            {tavoli.map((tavolo) => (
-              <span
-                key={tavolo.id}
-                className={`badge-pill ${inviatiPerTavolo[tavolo.id] ? 'aperto' : 'chiuso'}`}
-              >
-                {inviatiPerTavolo[tavolo.id] ? '✓' : '·'} {tavolo.nome}
-              </span>
-            ))}
-          </div>
-        </div>
+        <span className="dashboard-tv__status">
+          Round {round}: {ROUND_NOMI[round]} — {aperto ? 'Aperto' : 'Chiuso'}
+        </span>
       </div>
 
       {errore && <p className="status-error">❌ {errore}</p>}
 
-      {mostraRisultati && (
+      {mostraRisultati ? (
         <div
           className="dashboard-tv__grid"
           style={{
@@ -138,6 +118,32 @@ function Dashboard() {
               opzioniMap={opzioniMap}
             />
           ))}
+        </div>
+      ) : aperto ? (
+        <div className="dashboard-live">
+          {rimanenti !== null && (
+            <p className={`dashboard-live__timer${rimanenti <= 0 ? ' expired' : ''}`}>
+              {rimanenti <= 0 ? 'Tempo scaduto' : formattaMMSS(rimanenti)}
+            </p>
+          )}
+          <p className="dashboard-live__contatore">
+            {numInviati}/{tavoli.length} tavoli hanno inviato
+          </p>
+          <div className="dashboard-live__tavoli">
+            {tavoli.map((tavolo) => (
+              <span
+                key={tavolo.id}
+                className={`dashboard-tile${inviatiPerTavolo[tavolo.id] ? ' inviato' : ''}`}
+              >
+                {inviatiPerTavolo[tavolo.id] ? '✓ ' : ''}
+                {tavolo.nome}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="dashboard-live">
+          <p className="dashboard-live__attesa">In attesa che la regia apra il round...</p>
         </div>
       )}
     </div>

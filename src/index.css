@@ -397,22 +397,72 @@ label {
   font-size: clamp(1.1rem, 1.8vw, 1.6rem);
 }
 
-.dashboard-tv__timer {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: clamp(1.5rem, 2.6vw, 2.4rem);
-  color: var(--accent);
-}
+/* ---- Dashboard: vista "live" (round aperto, in attesa degli invii) ---- */
 
-.dashboard-tv__timer.expired {
-  color: var(--danger);
-}
-
-.dashboard-tv__pills {
+.dashboard-live {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  gap: 0.4rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2.5vh, 2rem);
+  text-align: center;
+}
+
+.dashboard-live__timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1;
+  font-size: clamp(5rem, 22vh, 11rem);
+  color: var(--accent);
+  margin: 0;
+}
+
+.dashboard-live__timer.expired {
+  color: var(--danger);
+  font-size: clamp(2.5rem, 9vh, 5rem);
+}
+
+.dashboard-live__contatore {
+  font-size: clamp(1.1rem, 2.4vh, 1.6rem);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dashboard-live__attesa {
+  font-size: clamp(1.3rem, 3vh, 2rem);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dashboard-live__tavoli {
+  display: flex;
   flex-wrap: wrap;
-  max-width: 40vw;
+  justify-content: center;
+  gap: clamp(0.6rem, 1.6vw, 1.2rem);
+  max-width: 90vw;
+}
+
+.dashboard-tile {
+  display: inline-flex;
+  align-items: center;
+  padding: clamp(0.7rem, 1.8vh, 1.2rem) clamp(1.1rem, 2.4vw, 1.8rem);
+  border-radius: 12px;
+  font-size: clamp(1.05rem, 2.2vw, 1.5rem);
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 2px solid var(--border);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.dashboard-tile.inviato {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
 }
 
 .dashboard-tv__grid {

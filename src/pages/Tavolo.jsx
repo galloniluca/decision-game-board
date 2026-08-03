@@ -12,7 +12,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
+import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
 import { calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
@@ -165,6 +165,47 @@ function Tavolo() {
         <div className="card">
           <h3>I tuoi KPI</h3>
           <BoardKpi totali={totaliKpi} />
+        </div>
+
+        <div className="card">
+          <h3>Storico decisioni</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Round</th>
+                  <th>Scelta</th>
+                  <th>KPI dopo il round</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ROUNDS.map((r) => {
+                  const scelta = scelteTavolo.find((s) => s.round === r)
+                  const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
+                  const totaliFinoQui = calcolaKpiTavolo(
+                    scelteTavolo.filter((s) => s.round <= r),
+                    opzioniMap
+                  )
+                  return (
+                    <tr key={r}>
+                      <td style={{ whiteSpace: 'nowrap' }}>R{r}</td>
+                      <td>
+                        {scelta ? (
+                          <>
+                            <strong>{scelta.opzione}</strong>
+                            {opzione?.nome ? ` — ${opzione.nome}` : ''}
+                          </>
+                        ) : (
+                          <span className="status-muted">–</span>
+                        )}
+                      </td>
+                      <td>{scelta && <BoardKpi totali={totaliFinoQui} />}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {roundChiuso ? (
