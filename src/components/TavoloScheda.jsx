@@ -1,15 +1,12 @@
 import { ROUNDS } from '../lib/costanti'
-import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
-import BoardKpi from './BoardKpi'
-import GraficoKpi from './GraficoKpi'
+import { KPI_BASE_DEFAULT, KPI_CHIAVI } from '../lib/kpi'
+import GraficoKpiSingolo from './GraficoKpiSingolo'
 
 function TavoloScheda({ tavolo, scelteTavolo, opzioniMap, kpiBaseline = KPI_BASE_DEFAULT }) {
   const sceltePerRound = {}
   scelteTavolo.forEach((s) => {
     if (s.opzione) sceltePerRound[s.round] = s
   })
-
-  const totaliCorrenti = calcolaKpiTavolo(scelteTavolo, opzioniMap, kpiBaseline)
 
   return (
     <div className="dash-card">
@@ -27,19 +24,19 @@ function TavoloScheda({ tavolo, scelteTavolo, opzioniMap, kpiBaseline = KPI_BASE
         })}
       </div>
 
-      <div className="dash-card__kpi">
-        <span className="dash-card__kpi-label">KPI attuali</span>
-        <BoardKpi totali={totaliCorrenti} mostraValore={false} />
-      </div>
-
       <div className="dash-card__grafico">
-        <GraficoKpi
-          scelteTavolo={scelteTavolo}
-          opzioniMap={opzioniMap}
-          kpiBaseline={kpiBaseline}
-          legenda={false}
-          riempi
-        />
+        <div className="grafico-kpi-griglia grafico-kpi-griglia--riempi">
+          {KPI_CHIAVI.map((kpi) => (
+            <GraficoKpiSingolo
+              key={kpi}
+              chiave={kpi}
+              scelteTavolo={scelteTavolo}
+              opzioniMap={opzioniMap}
+              kpiBaseline={kpiBaseline}
+              riempi
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

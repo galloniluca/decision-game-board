@@ -5,7 +5,7 @@ const LARGHEZZA = 240
 const ALTEZZA = 80
 const MARGINE = 12
 
-function GraficoKpiSingolo({ chiave, scelteTavolo, opzioniMap, kpiBaseline }) {
+function GraficoKpiSingolo({ chiave, scelteTavolo, opzioniMap, kpiBaseline, riempi = false }) {
   const sceltePlayed = scelteTavolo.filter((s) => s.opzione)
   const ultimoRound = sceltePlayed.reduce((max, s) => Math.max(max, s.round), 0)
   const roundsMostrati = [0, ...ROUNDS.filter((r) => r <= ultimoRound)]
@@ -49,12 +49,23 @@ function GraficoKpiSingolo({ chiave, scelteTavolo, opzioniMap, kpiBaseline }) {
   const coloreDot = { rosso: 'var(--danger)', giallo: 'var(--warning)', verde: 'var(--success)' }
 
   return (
-    <div className="grafico-kpi-box">
+    <div
+      className="grafico-kpi-box"
+      style={riempi ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+    >
       <div className={`grafico-kpi-box__header kpi-${statoAttuale}`}>
         <span>{KPI_NOMI[chiave]}</span>
         <span>{valoreAttuale > 0 ? `+${valoreAttuale}` : valoreAttuale}</span>
       </div>
-      <svg viewBox={`0 0 ${LARGHEZZA} ${ALTEZZA}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <svg
+        viewBox={`0 0 ${LARGHEZZA} ${ALTEZZA}`}
+        preserveAspectRatio="none"
+        style={
+          riempi
+            ? { width: '100%', flex: 1, display: 'block', minHeight: 0 }
+            : { width: '100%', height: 'auto', display: 'block' }
+        }
+      >
         <polyline
           points={punti}
           fill="none"

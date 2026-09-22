@@ -167,6 +167,9 @@ function Tavolo() {
   const roundChiuso = sessione.stato !== 'aperto'
   const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
   const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
+  // I KPI di un round si vedono solo dopo che la regia lo ha chiuso, non appena inviata la scelta.
+  const ultimoRoundRivelato = roundChiuso ? round : round - 1
+  const scelteRivelate = scelteTavolo.filter((s) => s.round <= ultimoRoundRivelato)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -298,7 +301,7 @@ function Tavolo() {
               <GraficoKpiSingolo
                 key={kpi}
                 chiave={kpi}
-                scelteTavolo={scelteTavolo}
+                scelteTavolo={scelteRivelate}
                 opzioniMap={opzioniMap}
                 kpiBaseline={kpiBaseline}
               />
@@ -321,11 +324,10 @@ function Tavolo() {
                 {ROUNDS.map((r) => {
                   const scelta = scelteTavolo.find((s) => s.round === r && s.opzione)
                   const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
-                  const totaliFinoQui = calcolaKpiTavolo(
-                    scelteTavolo.filter((s) => s.round <= r),
-                    opzioniMap,
-                    kpiBaseline
-                  )
+                  const rivelato = r <= ultimoRoundRivelato
+                  const totaliFinoQui = rivelato
+                    ? calcolaKpiTavolo(scelteTavolo.filter((s) => s.round <= r), opzioniMap, kpiBaseline)
+                    : null
                   return (
                     <tr key={r}>
                       <td style={{ whiteSpace: 'nowrap' }}>R{r}</td>
@@ -339,7 +341,12 @@ function Tavolo() {
                           <span className="status-muted">–</span>
                         )}
                       </td>
-                      <td>{scelta && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}</td>
+                      <td>
+                        {scelta && rivelato && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}
+                        {scelta && !rivelato && (
+                          <span className="status-muted">In attesa della chiusura del round</span>
+                        )}
+                      </td>
                     </tr>
                   )
                 })}

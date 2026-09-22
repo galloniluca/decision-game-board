@@ -538,44 +538,10 @@ label {
   line-height: 1;
 }
 
-.dash-card__kpi {
-  flex: none;
-  background: var(--surface-2);
-  border-radius: 10px;
-  padding: clamp(0.5rem, 1.4vh, 0.9rem) clamp(0.5rem, 1vw, 0.8rem);
-}
-
-.dash-card__kpi-label {
-  display: block;
-  font-size: clamp(0.65rem, 1.1vh, 0.8rem);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  font-weight: 700;
-  margin-bottom: clamp(0.3rem, 0.8vh, 0.5rem);
-}
-
-.dash-card__kpi .kpi-badge {
-  min-width: 0;
-  flex: 1;
-  padding: clamp(0.5rem, 1.6vh, 0.9rem) 0.3rem;
-}
-
-.dash-card__kpi .kpi-label {
-  font-size: clamp(0.7rem, 1.3vh, 0.9rem);
-}
-
-.dash-card__kpi .kpi-value {
-  font-size: clamp(1.3rem, 2.8vh, 2rem);
-}
-
-.dash-card__kpi .kpi-row {
-  gap: clamp(0.3rem, 0.7vw, 0.6rem);
-}
-
 .dash-card__grafico {
   flex: 1;
   min-height: 0;
+  display: flex;
 }
 
 /* ---- KPI badges ---- */
@@ -660,6 +626,22 @@ label {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
+}
+
+.grafico-kpi-griglia--riempi {
+  flex: 1;
+  min-width: 0;
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(0.3rem, 0.8vw, 0.6rem);
+}
+
+.grafico-kpi-griglia--riempi .grafico-kpi-box__header {
+  padding: clamp(0.2rem, 0.6vh, 0.4rem) clamp(0.35rem, 0.7vw, 0.6rem);
+  font-size: clamp(0.6rem, 1.1vh, 0.8rem);
+}
+
+.grafico-kpi-griglia--riempi .grafico-kpi-box svg {
+  padding: clamp(0.15rem, 0.5vh, 0.35rem) clamp(0.15rem, 0.4vw, 0.3rem) clamp(0.05rem, 0.2vh, 0.15rem);
 }
 
 .grafico-kpi-box {
