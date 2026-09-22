@@ -117,15 +117,81 @@ code {
   max-width: 960px;
 }
 
-.intro-hero {
-  text-align: center;
-  padding: clamp(2.5rem, 8vh, 5rem) 1.5rem;
+/* ---- Scena con la locandina evento come sfondo (attese pre/tra round) ---- */
+
+.poster-scena {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
 }
 
-.intro-hero__titolo {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.8rem, 6vw, 3rem);
-  letter-spacing: 0.02em;
+.poster-scena__sfondo {
+  position: absolute;
+  inset: -15%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(50px) brightness(0.55) saturate(1.15);
+  transform: scale(1.1);
+}
+
+.poster-scena__immagine {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.poster-scena__testo {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.poster-scena__riquadro {
+  background: rgba(10, 12, 48, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: clamp(0.9rem, 2.5vh, 1.5rem) clamp(1.1rem, 3vw, 2rem);
+  max-width: 90%;
+}
+
+.poster-scena__titolo {
+  margin: 0;
+  font-size: clamp(1.3rem, 4vw, 2.4rem);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+
+.poster-scena__sottotitolo {
+  margin: 0.4rem 0 0;
+  font-size: clamp(0.85rem, 1.6vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+.poster-scena-card {
+  padding: 0;
+  overflow: hidden;
+  height: clamp(320px, 55vh, 480px);
 }
 
 .topbar {
@@ -429,6 +495,15 @@ label {
   text-align: center;
 }
 
+.dashboard-live--poster {
+  padding: clamp(0.5rem, 1.5vh, 1rem) 0;
+}
+
+.dashboard-live--poster .poster-scena {
+  width: 100%;
+  height: 100%;
+}
+
 .dashboard-live__timer {
   font-variant-numeric: tabular-nums;
   font-weight: 800;
@@ -447,22 +522,6 @@ label {
   font-size: clamp(1.1rem, 2.4vh, 1.6rem);
   font-weight: 600;
   color: var(--text-muted);
-  margin: 0;
-}
-
-.dashboard-live__attesa {
-  font-size: clamp(1.3rem, 3vh, 2rem);
-  font-weight: 600;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.dashboard-live__titolo {
-  font-size: clamp(2.5rem, 7vh, 5.5rem);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--text);
   margin: 0;
 }
 

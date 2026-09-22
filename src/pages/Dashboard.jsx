@@ -6,6 +6,7 @@ import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import { statoInvioTavolo } from '../lib/statoTavolo'
 import TavoloScheda from '../components/TavoloScheda'
+import ScenaLocandina from '../components/ScenaLocandina'
 
 function Dashboard() {
   const [caricamento, setCaricamento] = useState(true)
@@ -134,9 +135,11 @@ function Dashboard() {
           </div>
         </>
       ) : mostraIntro ? (
-        <div className="dashboard-live">
-          <p className="dashboard-live__titolo">Lean Trade-off Game</p>
-          <p className="dashboard-live__attesa">In attesa che la regia apra il Round 1...</p>
+        <div className="dashboard-live dashboard-live--poster">
+          <ScenaLocandina
+            titolo="Lean Trade-off Game"
+            sottotitolo="In attesa che la regia apra il Round 1..."
+          />
         </div>
       ) : aperto ? (
         <div className="dashboard-live">
@@ -162,14 +165,15 @@ function Dashboard() {
           </div>
         </div>
       ) : partitaConclusa ? (
-        <div className="dashboard-live">
-          <p className="dashboard-live__attesa">
-            Partita conclusa — attiva "Mostra risultati" da Regia per il debrief finale.
-          </p>
+        <div className="dashboard-live dashboard-live--poster">
+          <ScenaLocandina
+            titolo="Fine del gioco"
+            sottotitolo='Attiva "Mostra risultati" da Regia per il debrief finale.'
+          />
         </div>
       ) : (
-        <div className="dashboard-live">
-          <p className="dashboard-live__attesa">In attesa che la regia apra il round...</p>
+        <div className="dashboard-live dashboard-live--poster">
+          <ScenaLocandina titolo={`In attesa del Round ${round}`} sottotitolo={ROUND_NOMI[round]} />
         </div>
       )}
     </div>

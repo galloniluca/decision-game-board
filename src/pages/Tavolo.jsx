@@ -19,6 +19,7 @@ import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import GraficoKpiSingolo from '../components/GraficoKpiSingolo'
+import ScenaLocandina from '../components/ScenaLocandina'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -190,9 +191,11 @@ function Tavolo() {
         <div className="page-inner">
           <h1>{tavolo.nome}</h1>
           {errore && <p className="status-error">❌ {errore}</p>}
-          <div className="card intro-hero">
-            <h2 className="intro-hero__titolo">Lean Trade-off Game</h2>
-            <p className="status-muted">In attesa che la regia apra il Round 1...</p>
+          <div className="card poster-scena-card">
+            <ScenaLocandina
+              titolo="Lean Trade-off Game"
+              sottotitolo="In attesa che la regia apra il Round 1..."
+            />
           </div>
         </div>
       </div>
@@ -208,20 +211,15 @@ function Tavolo() {
         {errore && <p className="status-error">❌ {errore}</p>}
 
         {partitaConclusa ? (
-          <div className="card">
-            <h2 style={{ marginTop: 0 }}>Partita conclusa</h2>
-            <p className="status-muted">
-              Il gioco è terminato dopo il Round 4. Questi sono i tuoi KPI finali e il percorso fatto.
-            </p>
+          <div className="card poster-scena-card">
+            <ScenaLocandina
+              titolo="Fine del gioco"
+              sottotitolo="Questi sono i tuoi KPI finali e il percorso fatto."
+            />
           </div>
         ) : roundChiuso ? (
-          <div className="card">
-            <span className="badge-pill chiuso">
-              Round {round} · {ROUND_NOMI[round]} · Chiuso
-            </span>
-            <p className="status-muted" style={{ marginTop: '0.75rem' }}>
-              In attesa che la regia apra il round...
-            </p>
+          <div className="card poster-scena-card">
+            <ScenaLocandina titolo={`In attesa del Round ${round}`} sottotitolo={ROUND_NOMI[round]} />
           </div>
         ) : (
           <div className="card">
