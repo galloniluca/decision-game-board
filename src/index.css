@@ -140,11 +140,9 @@ code {
   letter-spacing: 0.08em;
 }
 
-.brand-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--accent);
+.brand-logo {
+  height: 24px;
+  width: auto;
   flex: none;
 }
 

@@ -2,7 +2,7 @@ function Topbar({ right }) {
   return (
     <div className="topbar">
       <span className="brand">
-        <span className="brand-mark" />
+        <img src="/logo-bpr.png" alt="BPR Group" className="brand-logo" />
         Lean Trade-off Game
       </span>
       {right}

@@ -93,7 +93,7 @@ function Dashboard() {
     <div className="dashboard-tv">
       <div className="dashboard-tv__header">
         <span className="brand">
-          <span className="brand-mark" />
+          <img src="/logo-bpr.png" alt="BPR Group" className="brand-logo" />
           Lean Trade-off Game
         </span>
         <span className="dashboard-tv__status">
