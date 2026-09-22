@@ -91,7 +91,7 @@ function Dashboard() {
 
   const nessunaSceltaAncora = !scelteTutte.some((s) => s.opzione)
   const partitaConclusa = round === 4 && !aperto && scelteTutte.some((s) => s.round === 4 && s.opzione)
-  const mostraIntro = !mostraRisultati && nessunaSceltaAncora && round === 1
+  const mostraIntro = !mostraRisultati && !aperto && nessunaSceltaAncora && round === 1
 
   const colonne = tavoli.length <= 4 ? 2 : 3
   const righe = Math.ceil(tavoli.length / colonne) || 1

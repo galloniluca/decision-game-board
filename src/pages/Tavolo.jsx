@@ -13,12 +13,12 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
-import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
+import { KPI_BASE_DEFAULT, KPI_CHIAVI, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
-import GraficoKpi from '../components/GraficoKpi'
+import GraficoKpiSingolo from '../components/GraficoKpiSingolo'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -167,7 +167,6 @@ function Tavolo() {
   const roundChiuso = sessione.stato !== 'aperto'
   const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
   const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
-  const totaliKpi = calcolaKpiTavolo(scelteTavolo, opzioniMap, kpiBaseline)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -185,16 +184,18 @@ function Tavolo() {
     return (
       <div className="page">
         <Topbar />
-        <div className="page-inner">
+        <div className="page-inner page-inner--wide">
           <h1>{tavolo.nome}</h1>
           {errore && <p className="status-error">❌ {errore}</p>}
-          <div className="card">
-            <h2 style={{ marginTop: 0 }}>Lean Trade-off Game</h2>
-            <p className="status-muted">In attesa che la regia apra il Round 1...</p>
+          <div className="card" style={{ padding: '1rem 0.75rem' }}>
+            <h2 style={{ marginTop: 0, marginLeft: '0.5rem' }}>Lean Trade-off Game</h2>
+            <p className="status-muted" style={{ marginLeft: '0.5rem' }}>
+              In attesa che la regia apra il Round 1...
+            </p>
             <img
               src="/infografica-gioco.webp"
               alt="Come funziona il gioco"
-              style={{ width: '100%', borderRadius: 12, marginTop: '0.75rem' }}
+              style={{ width: '100%', borderRadius: 12, marginTop: '0.75rem', display: 'block' }}
             />
           </div>
         </div>
@@ -209,56 +210,6 @@ function Tavolo() {
         <h1>{tavolo.nome}</h1>
 
         {errore && <p className="status-error">❌ {errore}</p>}
-
-        <div className="card">
-          <h3>I tuoi KPI</h3>
-          <BoardKpi totali={totaliKpi} mostraValore={false} nomiCompleti />
-          <div style={{ marginTop: '1rem' }}>
-            <GraficoKpi scelteTavolo={scelteTavolo} opzioniMap={opzioniMap} kpiBaseline={kpiBaseline} />
-          </div>
-        </div>
-
-        <div className="card">
-          <h3>Storico decisioni</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Round</th>
-                  <th>Scelta</th>
-                  <th>KPI dopo il round</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ROUNDS.map((r) => {
-                  const scelta = scelteTavolo.find((s) => s.round === r && s.opzione)
-                  const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
-                  const totaliFinoQui = calcolaKpiTavolo(
-                    scelteTavolo.filter((s) => s.round <= r),
-                    opzioniMap,
-                    kpiBaseline
-                  )
-                  return (
-                    <tr key={r}>
-                      <td style={{ whiteSpace: 'nowrap' }}>R{r}</td>
-                      <td>
-                        {scelta ? (
-                          <>
-                            <strong>{scelta.opzione}</strong>
-                            {opzione?.nome ? ` — ${opzione.nome}` : ''}
-                          </>
-                        ) : (
-                          <span className="status-muted">–</span>
-                        )}
-                      </td>
-                      <td>{scelta && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
         {partitaConclusa ? (
           <div className="card">
@@ -339,6 +290,63 @@ function Tavolo() {
             </button>
           </div>
         )}
+
+        <div className="card">
+          <h3>I tuoi KPI</h3>
+          <div className="grafico-kpi-griglia">
+            {KPI_CHIAVI.map((kpi) => (
+              <GraficoKpiSingolo
+                key={kpi}
+                chiave={kpi}
+                scelteTavolo={scelteTavolo}
+                opzioniMap={opzioniMap}
+                kpiBaseline={kpiBaseline}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Storico decisioni</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Round</th>
+                  <th>Scelta</th>
+                  <th>KPI dopo il round</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ROUNDS.map((r) => {
+                  const scelta = scelteTavolo.find((s) => s.round === r && s.opzione)
+                  const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
+                  const totaliFinoQui = calcolaKpiTavolo(
+                    scelteTavolo.filter((s) => s.round <= r),
+                    opzioniMap,
+                    kpiBaseline
+                  )
+                  return (
+                    <tr key={r}>
+                      <td style={{ whiteSpace: 'nowrap' }}>R{r}</td>
+                      <td>
+                        {scelta ? (
+                          <>
+                            <strong>{scelta.opzione}</strong>
+                            {opzione?.nome ? ` — ${opzione.nome}` : ''}
+                          </>
+                        ) : (
+                          <span className="status-muted">–</span>
+                        )}
+                      </td>
+                      <td>{scelta && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )
