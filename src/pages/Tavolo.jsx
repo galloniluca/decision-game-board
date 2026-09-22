@@ -180,9 +180,9 @@ function Tavolo() {
         ? 'Aggiorna scelta'
         : 'Invia scelta'
 
-  const nessunaSceltaAncora = !scelteTavolo.some((s) => s.opzione)
-  const partitaConclusa = round === 4 && roundChiuso && scelteTavolo.some((s) => s.round === 4 && s.opzione)
-  const mostraIntro = roundChiuso && round === 1 && nessunaSceltaAncora
+  const roundConcluso = sessione.round_concluso ?? false
+  const partitaConclusa = round === 4 && roundConcluso
+  const mostraIntro = round === 1 && roundChiuso && !roundConcluso
 
   if (mostraIntro) {
     return (
@@ -192,10 +192,7 @@ function Tavolo() {
           <h1>{tavolo.nome}</h1>
           {errore && <p className="status-error">❌ {errore}</p>}
           <div className="card poster-scena-card">
-            <ScenaLocandina
-              titolo="Lean Trade-off Game"
-              sottotitolo="In attesa che la regia apra il Round 1..."
-            />
+            <ScenaLocandina titolo="In attesa dell'inizio del gioco" />
           </div>
         </div>
       </div>
@@ -217,11 +214,7 @@ function Tavolo() {
               sottotitolo="Questi sono i tuoi KPI finali e il percorso fatto."
             />
           </div>
-        ) : roundChiuso ? (
-          <div className="card poster-scena-card">
-            <ScenaLocandina titolo={`In attesa del Round ${round}`} sottotitolo={ROUND_NOMI[round]} />
-          </div>
-        ) : (
+        ) : roundChiuso ? null : (
           <div className="card">
             <div
               style={{

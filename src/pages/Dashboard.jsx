@@ -90,9 +90,10 @@ function Dashboard() {
     (s) => statoInvioTavolo(s) === 'inviato'
   ).length
 
-  const nessunaSceltaAncora = !scelteTutte.some((s) => s.opzione)
-  const partitaConclusa = round === 4 && !aperto && scelteTutte.some((s) => s.round === 4 && s.opzione)
-  const mostraIntro = !mostraRisultati && !aperto && nessunaSceltaAncora && round === 1
+  const roundConcluso = sessione.round_concluso ?? false
+  const partitaConclusa = round === 4 && roundConcluso
+  const mostraIntro = round === 1 && !aperto && !roundConcluso
+  const prossimoRound = roundConcluso ? round + 1 : round
 
   const colonne = tavoli.length <= 4 ? 2 : 3
   const righe = Math.ceil(tavoli.length / colonne) || 1
@@ -136,10 +137,7 @@ function Dashboard() {
         </>
       ) : mostraIntro ? (
         <div className="dashboard-live dashboard-live--poster">
-          <ScenaLocandina
-            titolo="Lean Trade-off Game"
-            sottotitolo="In attesa che la regia apra il Round 1..."
-          />
+          <ScenaLocandina variante="largo" titolo="In attesa dell'inizio del gioco" />
         </div>
       ) : aperto ? (
         <div className="dashboard-live">
@@ -167,13 +165,18 @@ function Dashboard() {
       ) : partitaConclusa ? (
         <div className="dashboard-live dashboard-live--poster">
           <ScenaLocandina
+            variante="largo"
             titolo="Fine del gioco"
             sottotitolo='Attiva "Mostra risultati" da Regia per il debrief finale.'
           />
         </div>
       ) : (
         <div className="dashboard-live dashboard-live--poster">
-          <ScenaLocandina titolo={`In attesa del Round ${round}`} sottotitolo={ROUND_NOMI[round]} />
+          <ScenaLocandina
+            variante="largo"
+            titolo={`In attesa del Round ${prossimoRound}`}
+            sottotitolo={ROUND_NOMI[prossimoRound]}
+          />
         </div>
       )}
     </div>

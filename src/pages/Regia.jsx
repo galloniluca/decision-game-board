@@ -72,6 +72,7 @@ function Regia() {
       await updateDoc(doc(db, 'sessione', 'corrente'), {
         stato: 'aperto',
         timer_avvio: serverTimestamp(),
+        round_concluso: false,
       })
     } catch (err) {
       setErrore(err.message)
@@ -82,7 +83,7 @@ function Regia() {
   async function chiudiRound() {
     setAzioneInCorso(true)
     try {
-      await updateDoc(doc(db, 'sessione', 'corrente'), { stato: 'chiuso' })
+      await updateDoc(doc(db, 'sessione', 'corrente'), { stato: 'chiuso', round_concluso: true })
     } catch (err) {
       setErrore(err.message)
     }
@@ -123,6 +124,7 @@ function Regia() {
       await updateDoc(doc(db, 'sessione', 'corrente'), {
         round_attivo: sessione.round_attivo + 1,
         stato: 'chiuso',
+        round_concluso: false,
       })
     } catch (err) {
       setErrore(err.message)

@@ -152,6 +152,12 @@ code {
   box-shadow: var(--shadow);
 }
 
+.poster-scena--largo {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .poster-scena__testo {
   position: absolute;
   z-index: 2;

@@ -11,5 +11,6 @@ export async function eseguiResetPartita() {
     round_attivo: 1,
     stato: 'chiuso',
     timer_avvio: null,
+    round_concluso: false,
   })
 }
