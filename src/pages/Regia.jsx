@@ -6,6 +6,7 @@ import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import { eseguiResetPartita } from '../lib/resetPartita'
+import { statoInvioTavolo } from '../lib/statoTavolo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
@@ -150,7 +151,9 @@ function Regia() {
     .forEach((s) => {
       inviatiPerTavolo[s.tavolo_id] = s
     })
-  const numInviati = Object.keys(inviatiPerTavolo).length
+  const numInviati = Object.values(inviatiPerTavolo).filter(
+    (s) => statoInvioTavolo(s) === 'inviato'
+  ).length
 
   return (
     <div className="page">
@@ -256,9 +259,17 @@ function Regia() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
             {tavoli.map((tavolo) => {
               const scelta = inviatiPerTavolo[tavolo.id]
+              const stato = statoInvioTavolo(scelta)
+              const classe = stato === 'inviato' ? 'aperto' : stato === 'in_corso' ? 'in-corso' : 'chiuso'
+              const testo =
+                stato === 'inviato'
+                  ? `✓ ${tavolo.nome} · ${formattaOrario(scelta.inviato_at) ?? '...'}`
+                  : stato === 'in_corso'
+                    ? `… ${tavolo.nome} (sta scegliendo)`
+                    : `· ${tavolo.nome}`
               return (
-                <span key={tavolo.id} className={`badge-pill ${scelta ? 'aperto' : 'chiuso'}`}>
-                  {scelta ? `✓ ${tavolo.nome} · ${formattaOrario(scelta.inviato_at) ?? '...'}` : `· ${tavolo.nome}`}
+                <span key={tavolo.id} className={`badge-pill ${classe}`}>
+                  {testo}
                 </span>
               )
             })}

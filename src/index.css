@@ -469,6 +469,12 @@ label {
   border-color: var(--success);
 }
 
+.dashboard-tile.in-corso {
+  background: var(--warning);
+  color: #241a00;
+  border-color: var(--warning);
+}
+
 .dashboard-tv__grid {
   flex: 1;
   min-height: 0;
@@ -501,27 +507,25 @@ label {
 }
 
 .dash-card__rounds {
-  flex: 1;
+  flex: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: clamp(0.3rem, 0.8vw, 0.6rem);
-  align-content: center;
 }
 
 .dash-round-chip {
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.3rem, 1vh, 0.55rem);
-  padding: clamp(0.3rem, 1vh, 0.6rem) 0.2rem;
+  gap: clamp(0.15rem, 0.5vh, 0.3rem);
+  padding: clamp(0.25rem, 0.8vh, 0.45rem) 0.2rem;
   border-radius: 8px;
   background: var(--surface-2);
 }
 
 .dash-round-chip__label {
-  font-size: clamp(0.65rem, 1.1vh, 0.85rem);
+  font-size: clamp(0.6rem, 1vh, 0.75rem);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
@@ -529,55 +533,49 @@ label {
 }
 
 .dash-round-chip__valore {
-  font-size: clamp(1.6rem, 4.2vh, 3rem);
+  font-size: clamp(1.2rem, 3vh, 2rem);
   font-weight: 800;
   line-height: 1;
 }
 
-.mini-semaforo {
-  display: flex;
-  gap: clamp(2px, 0.3vh, 4px);
-}
-
-.mini-dot {
-  width: clamp(7px, 1.1vh, 12px);
-  height: clamp(7px, 1.1vh, 12px);
-  border-radius: 2px;
-  flex: none;
-}
-
-.mini-rosso {
-  background: var(--danger);
-}
-
-.mini-giallo {
-  background: var(--warning);
-}
-
-.mini-verde {
-  background: var(--success);
-}
-
 .dash-card__kpi {
   flex: none;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: clamp(0.5rem, 1.4vh, 0.9rem) clamp(0.5rem, 1vw, 0.8rem);
+}
+
+.dash-card__kpi-label {
+  display: block;
+  font-size: clamp(0.65rem, 1.1vh, 0.8rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: clamp(0.3rem, 0.8vh, 0.5rem);
 }
 
 .dash-card__kpi .kpi-badge {
   min-width: 0;
   flex: 1;
-  padding: clamp(0.4rem, 1.3vh, 0.75rem) 0.3rem;
+  padding: clamp(0.5rem, 1.6vh, 0.9rem) 0.3rem;
 }
 
 .dash-card__kpi .kpi-label {
-  font-size: clamp(0.6rem, 1vh, 0.75rem);
+  font-size: clamp(0.7rem, 1.3vh, 0.9rem);
 }
 
 .dash-card__kpi .kpi-value {
-  font-size: clamp(1.1rem, 2.4vh, 1.7rem);
+  font-size: clamp(1.3rem, 2.8vh, 2rem);
 }
 
 .dash-card__kpi .kpi-row {
   gap: clamp(0.3rem, 0.7vw, 0.6rem);
+}
+
+.dash-card__grafico {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ---- KPI badges ---- */
@@ -628,6 +626,22 @@ label {
   font-size: 1rem;
 }
 
+.kpi-row--nomi {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.kpi-badge--nome {
+  min-width: 0;
+  padding: 0.7rem 0.6rem;
+}
+
+.kpi-badge--nome .kpi-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
 .kpi-rosso {
   background: var(--danger);
 }
@@ -665,6 +679,11 @@ label {
 .badge-pill.aperto {
   background: rgba(74, 222, 128, 0.16);
   color: var(--success);
+}
+
+.badge-pill.in-corso {
+  background: rgba(255, 193, 94, 0.2);
+  color: var(--warning);
 }
 
 .badge-pill.chiuso {

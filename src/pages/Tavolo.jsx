@@ -18,6 +18,7 @@ import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
+import GraficoKpi from '../components/GraficoKpi'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -99,6 +100,26 @@ function Tavolo() {
     setInvioStato('inattivo')
   }, [sessione?.round_attivo, scelteTavolo])
 
+  // Scrive la selezione corrente come bozza in tempo reale (visibile a Regia/Dashboard come
+  // "in corso"), separata dalla scelta confermata che si scrive solo con "Invia scelta".
+  async function selezionaOpzione(lettera) {
+    setSelezionata(lettera)
+    if (!sessione) return
+    try {
+      await setDoc(
+        doc(db, 'scelte', idScelta(id, sessione.round_attivo)),
+        {
+          tavolo_id: Number(id),
+          round: sessione.round_attivo,
+          opzione_bozza: lettera,
+        },
+        { merge: true }
+      )
+    } catch {
+      // bozza non critica: nessun errore mostrato all'utente
+    }
+  }
+
   async function inviaScelta() {
     if (!selezionata || !sessione) return
     setInvioStato('invio')
@@ -109,6 +130,7 @@ function Tavolo() {
         tavolo_id: Number(id),
         round: sessione.round_attivo,
         opzione: selezionata,
+        opzione_bozza: selezionata,
         inviato_at: serverTimestamp(),
       })
     } catch (err) {
@@ -155,6 +177,31 @@ function Tavolo() {
         ? 'Aggiorna scelta'
         : 'Invia scelta'
 
+  const nessunaSceltaAncora = !scelteTavolo.some((s) => s.opzione)
+  const partitaConclusa = round === 4 && roundChiuso && scelteTavolo.some((s) => s.round === 4 && s.opzione)
+  const mostraIntro = roundChiuso && round === 1 && nessunaSceltaAncora
+
+  if (mostraIntro) {
+    return (
+      <div className="page">
+        <Topbar />
+        <div className="page-inner">
+          <h1>{tavolo.nome}</h1>
+          {errore && <p className="status-error">❌ {errore}</p>}
+          <div className="card">
+            <h2 style={{ marginTop: 0 }}>Lean Trade-off Game</h2>
+            <p className="status-muted">In attesa che la regia apra il Round 1...</p>
+            <img
+              src="/infografica-gioco.webp"
+              alt="Come funziona il gioco"
+              style={{ width: '100%', borderRadius: 12, marginTop: '0.75rem' }}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page">
       <Topbar />
@@ -165,7 +212,10 @@ function Tavolo() {
 
         <div className="card">
           <h3>I tuoi KPI</h3>
-          <BoardKpi totali={totaliKpi} mostraValore={false} />
+          <BoardKpi totali={totaliKpi} mostraValore={false} nomiCompleti />
+          <div style={{ marginTop: '1rem' }}>
+            <GraficoKpi scelteTavolo={scelteTavolo} opzioniMap={opzioniMap} kpiBaseline={kpiBaseline} />
+          </div>
         </div>
 
         <div className="card">
@@ -181,7 +231,7 @@ function Tavolo() {
               </thead>
               <tbody>
                 {ROUNDS.map((r) => {
-                  const scelta = scelteTavolo.find((s) => s.round === r)
+                  const scelta = scelteTavolo.find((s) => s.round === r && s.opzione)
                   const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
                   const totaliFinoQui = calcolaKpiTavolo(
                     scelteTavolo.filter((s) => s.round <= r),
@@ -210,7 +260,14 @@ function Tavolo() {
           </div>
         </div>
 
-        {roundChiuso ? (
+        {partitaConclusa ? (
+          <div className="card">
+            <h2 style={{ marginTop: 0 }}>Partita conclusa</h2>
+            <p className="status-muted">
+              Il gioco è terminato dopo il Round 4. Questi sono i tuoi KPI finali e il percorso fatto.
+            </p>
+          </div>
+        ) : roundChiuso ? (
           <div className="card">
             <span className="badge-pill chiuso">
               Round {round} · {ROUND_NOMI[round]} · Chiuso
@@ -260,7 +317,7 @@ function Tavolo() {
                   <button
                     key={lettera}
                     type="button"
-                    onClick={() => setSelezionata(lettera)}
+                    onClick={() => selezionaOpzione(lettera)}
                     className={`option-btn${selezionataAttiva ? ' selected' : ''}`}
                   >
                     <span className="option-letter">{lettera}</span>
