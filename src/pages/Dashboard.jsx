@@ -6,7 +6,7 @@ import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import { statoInvioTavolo } from '../lib/statoTavolo'
 import TavoloScheda from '../components/TavoloScheda'
-import ScenaLocandina from '../components/ScenaLocandina'
+import ScenaEvento from '../components/ScenaEvento'
 
 function Dashboard() {
   const [caricamento, setCaricamento] = useState(true)
@@ -136,8 +136,8 @@ function Dashboard() {
           </div>
         </>
       ) : mostraIntro ? (
-        <div className="dashboard-live dashboard-live--poster">
-          <ScenaLocandina variante="largo" titolo="In attesa dell'inizio del gioco" />
+        <div className="dashboard-live">
+          <ScenaEvento titolo="In attesa dell'inizio del gioco" />
         </div>
       ) : aperto ? (
         <div className="dashboard-live">
@@ -163,20 +163,15 @@ function Dashboard() {
           </div>
         </div>
       ) : partitaConclusa ? (
-        <div className="dashboard-live dashboard-live--poster">
-          <ScenaLocandina
-            variante="largo"
+        <div className="dashboard-live">
+          <ScenaEvento
             titolo="Fine del gioco"
             sottotitolo='Attiva "Mostra risultati" da Regia per il debrief finale.'
           />
         </div>
       ) : (
-        <div className="dashboard-live dashboard-live--poster">
-          <ScenaLocandina
-            variante="largo"
-            titolo={`In attesa del Round ${prossimoRound}`}
-            sottotitolo={ROUND_NOMI[prossimoRound]}
-          />
+        <div className="dashboard-live">
+          <ScenaEvento titolo={`In attesa del Round ${prossimoRound}`} sottotitolo={ROUND_NOMI[prossimoRound]} />
         </div>
       )}
     </div>

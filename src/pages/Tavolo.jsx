@@ -12,14 +12,12 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
-import { KPI_BASE_DEFAULT, KPI_CHIAVI, calcolaKpiTavolo } from '../lib/kpi'
+import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
+import { KPI_BASE_DEFAULT, KPI_CHIAVI } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
-import BoardKpi from '../components/BoardKpi'
 import GraficoKpiSingolo from '../components/GraficoKpiSingolo'
-import ScenaLocandina from '../components/ScenaLocandina'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -165,11 +163,11 @@ function Tavolo() {
   }
 
   const round = sessione.round_attivo
-  const roundChiuso = sessione.stato !== 'aperto'
+  const roundAperto = sessione.stato === 'aperto'
   const inviataPerRoundAttivo = scelteTavolo.find((s) => s.round === round)?.opzione ?? null
   const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
   // I KPI di un round si vedono solo dopo che la regia lo ha chiuso, non appena inviata la scelta.
-  const ultimoRoundRivelato = roundChiuso ? round : round - 1
+  const ultimoRoundRivelato = roundAperto ? round - 1 : round
   const scelteRivelate = scelteTavolo.filter((s) => s.round <= ultimoRoundRivelato)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
@@ -180,25 +178,6 @@ function Tavolo() {
         ? 'Aggiorna scelta'
         : 'Invia scelta'
 
-  const roundConcluso = sessione.round_concluso ?? false
-  const partitaConclusa = round === 4 && roundConcluso
-  const mostraIntro = round === 1 && roundChiuso && !roundConcluso
-
-  if (mostraIntro) {
-    return (
-      <div className="page">
-        <Topbar />
-        <div className="page-inner">
-          <h1>{tavolo.nome}</h1>
-          {errore && <p className="status-error">❌ {errore}</p>}
-          <div className="card poster-scena-card">
-            <ScenaLocandina titolo="In attesa dell'inizio del gioco" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="page">
       <Topbar />
@@ -207,14 +186,7 @@ function Tavolo() {
 
         {errore && <p className="status-error">❌ {errore}</p>}
 
-        {partitaConclusa ? (
-          <div className="card poster-scena-card">
-            <ScenaLocandina
-              titolo="Fine del gioco"
-              sottotitolo="Questi sono i tuoi KPI finali e il percorso fatto."
-            />
-          </div>
-        ) : roundChiuso ? null : (
+        {roundAperto && (
           <div className="card">
             <div
               style={{
@@ -290,52 +262,6 @@ function Tavolo() {
                 kpiBaseline={kpiBaseline}
               />
             ))}
-          </div>
-        </div>
-
-        <div className="card">
-          <h3>Storico decisioni</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Round</th>
-                  <th>Scelta</th>
-                  <th>KPI dopo il round</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ROUNDS.map((r) => {
-                  const scelta = scelteTavolo.find((s) => s.round === r && s.opzione)
-                  const opzione = scelta ? opzioniMap[idOpzione(r, scelta.opzione)] : null
-                  const rivelato = r <= ultimoRoundRivelato
-                  const totaliFinoQui = rivelato
-                    ? calcolaKpiTavolo(scelteTavolo.filter((s) => s.round <= r), opzioniMap, kpiBaseline)
-                    : null
-                  return (
-                    <tr key={r}>
-                      <td style={{ whiteSpace: 'nowrap' }}>R{r}</td>
-                      <td>
-                        {scelta ? (
-                          <>
-                            <strong>{scelta.opzione}</strong>
-                            {opzione?.nome ? ` — ${opzione.nome}` : ''}
-                          </>
-                        ) : (
-                          <span className="status-muted">–</span>
-                        )}
-                      </td>
-                      <td>
-                        {scelta && rivelato && <BoardKpi totali={totaliFinoQui} mostraValore={false} />}
-                        {scelta && !rivelato && (
-                          <span className="status-muted">In attesa della chiusura del round</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
