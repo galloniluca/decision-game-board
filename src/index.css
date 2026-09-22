@@ -39,9 +39,13 @@ body {
   margin: 0;
   min-height: 100vh;
   background-color: var(--bg-base);
-  background-image: radial-gradient(ellipse 140% 55% at 50% -10%, var(--bg-glow) 0%, transparent 62%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-image:
+    radial-gradient(ellipse 140% 55% at 50% -10%, var(--bg-glow) 0%, transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 600'%3E%3Cpath d='M20,580 C160,580 160,430 300,430 C440,430 440,280 300,280 C160,280 160,130 300,130 C380,130 420,70 380,10' fill='none' stroke='white' stroke-width='22' stroke-linecap='round' opacity='0.15'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center top, right bottom;
+  background-size: cover, min(50vw, 480px) auto;
+  background-attachment: fixed, fixed;
 }
 
 h1,
@@ -372,11 +376,7 @@ label {
   display: flex;
   flex-direction: column;
   padding: clamp(0.75rem, 1.8vh, 1.5rem) clamp(1rem, 2.2vw, 2rem);
-  background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Cpath d='M30,470 C150,470 150,350 250,350 C350,350 350,230 250,230 C150,230 150,110 250,110 C320,110 350,60 380,20' fill='none' stroke='rgb(145,149,255)' stroke-width='26' stroke-linecap='round' opacity='0.12'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right -50px bottom -60px;
-  background-size: 38% auto;
+  background: transparent;
   color: var(--text);
 }
 
