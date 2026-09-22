@@ -187,19 +187,12 @@ function Tavolo() {
     return (
       <div className="page">
         <Topbar />
-        <div className="page-inner page-inner--wide">
+        <div className="page-inner">
           <h1>{tavolo.nome}</h1>
           {errore && <p className="status-error">❌ {errore}</p>}
-          <div className="card" style={{ padding: '1rem 0.75rem' }}>
-            <h2 style={{ marginTop: 0, marginLeft: '0.5rem' }}>Lean Trade-off Game</h2>
-            <p className="status-muted" style={{ marginLeft: '0.5rem' }}>
-              In attesa che la regia apra il Round 1...
-            </p>
-            <img
-              src="/infografica-gioco.webp"
-              alt="Come funziona il gioco"
-              style={{ width: '100%', borderRadius: 12, marginTop: '0.75rem', display: 'block' }}
-            />
+          <div className="card intro-hero">
+            <h2 className="intro-hero__titolo">Lean Trade-off Game</h2>
+            <p className="status-muted">In attesa che la regia apra il Round 1...</p>
           </div>
         </div>
       </div>

@@ -135,12 +135,8 @@ function Dashboard() {
         </>
       ) : mostraIntro ? (
         <div className="dashboard-live">
+          <p className="dashboard-live__titolo">Lean Trade-off Game</p>
           <p className="dashboard-live__attesa">In attesa che la regia apra il Round 1...</p>
-          <img
-            src="/infografica-gioco.webp"
-            alt="Come funziona il gioco"
-            style={{ maxWidth: '75%', maxHeight: '65vh', borderRadius: 16 }}
-          />
         </div>
       ) : aperto ? (
         <div className="dashboard-live">
