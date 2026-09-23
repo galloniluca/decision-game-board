@@ -66,6 +66,7 @@ Le 5 pagine dell'app:
 13. **Storico decisioni sul Tavolo** — ogni giocatore vede sul proprio dispositivo l'evoluzione round su round, non solo il totale attuale
 14. **Reset partita disponibile anche da Regia** (prima solo da Config)
 15. **Matrice punteggi aggiornata** dal foglio Excel più recente fornito; baseline KPI reso configurabile
+16. **Survey evento `/survey`** (29/09/2026) — questionario pubblico da QR con risultato personale (radar, punti di forza, aree di attenzione), collezione `survey_risposte` protetta da regole (solo creazione validata), script di export `scripts/export-survey.mjs`. Dettagli e checklist nel README; specifica in `SURVEY_SPEC.md`
 
 ## Cosa manca / da fare prima dell'evento
 
@@ -77,10 +78,18 @@ Le 5 pagine dell'app:
 - [ ] **Stampa QR**: generati in Config, da stampare e posizionare fisicamente sui tavoli
 - [ ] Verificare le dimensioni della Dashboard sullo schermo/TV reale che verrà usato il giorno dell'evento (finora validato solo via screenshot simulati a 1920×1080 e 1366×768)
 
+- [ ] **Survey: frasi di lettura** — sostituire i 35 segnaposto in `src/survey/frasi.js`
+- [ ] **Survey: informativa privacy** — testo in `INFORMATIVA_PRIVACY` (`src/survey/content.js`), incrementando `VERSIONE_TESTO_CONSENSO`
+- [ ] **Survey: regione Firestore** — se il database attuale non è in UE, creare un progetto separato in UE e valorizzare le `VITE_SURVEY_FIREBASE_*` su Cloudflare
+- [ ] **Survey: pubblicare `firestore.rules`** dalla console Firebase (e nel progetto survey, se separato) e rifare il test del game
+- [ ] **Survey: checklist di test manuale** nel README, da dispositivi reali
+- [ ] **Survey: QR code** verso `https://<dominio>/survey`
+
 ## Rischi noti / cose a cui fare attenzione
 
 - Il progetto Firebase (`decision-game-2c5f7`) e il progetto Cloudflare condividono le stesse API key usate durante lo sviluppo — nessuna azione richiesta, ma è bene saperlo se in futuro si vogliono ruotare le credenziali
-- Le regole di sicurezza Firestore sono completamente aperte (`allow read, write: if true`) — accettabile per un evento singolo a bassa criticità con URL non pubblicizzati, ma chiunque avesse il link Firestore diretto potrebbe leggere/scrivere i dati
+- Le regole di sicurezza Firestore delle 4 collezioni del game sono completamente aperte (`allow read, write: if true`) — accettabile per un evento singolo a bassa criticità con URL non pubblicizzati, ma chiunque avesse il link Firestore diretto potrebbe leggere/scrivere i dati del game
+- `survey_risposte` contiene dati personali: dal browser si può solo creare; **mai** aggiungere una regola generica `match /{document=**}` (le regole si sommano in OR e la aprirebbero). `survey_export.json` e il file del service account non vanno mai committati (sono in `.gitignore`)
 - Nessuna Pull Request aperta: tutto il lavoro è direttamente sul branch che Cloudflare pubblica in automatico
 
 ## Stato repository

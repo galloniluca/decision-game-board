@@ -467,3 +467,69 @@ reale, per quello vale la checklist qui sotto.
    (salva), `/tavolo/1` (invia una scelta), `/regia` (apri/chiudi round), `/dashboard`
 5. Se il survey usa un progetto Firebase separato (variabili `VITE_SURVEY_FIREBASE_*`), pubblica
    lo stesso file anche lì
+
+## Survey evento — Passo 5: script di export
+
+- `scripts/export-survey.mjs` (Node, `firebase-admin` in devDependencies), da lanciare a mano:
+
+  ```bash
+  GOOGLE_APPLICATION_CREDENTIALS=/percorso/fuori-dal-repo/service-account.json \
+    npm run export:survey -- 2026-09-29-belforte
+  ```
+
+  Il service account si scarica da Console Firebase → Impostazioni progetto → Account di servizio
+  → "Genera nuova chiave privata" (del progetto del survey, se separato). Tienilo **fuori dal
+  repo**; per sicurezza `.gitignore` esclude comunque `*service-account*.json`,
+  `*-firebase-adminsdk-*.json`, `credenziali/` e `survey_export.json`
+- Legge tutti i documenti di `survey_risposte` con la `campagna` indicata e scrive
+  `survey_export.json` (id, tutti i campi, timestamp in ISO) nella cartella corrente; stampa il
+  numero di risposte e il conteggio per settore; segnala eventuali documenti i cui punteggi
+  salvati non coincidono con quelli ricalcolati dalle risposte
+- Benchmark e PDF non fanno parte dell'app: si producono a parte partendo da questo file
+- Verificato sull'emulatore Firestore (2 risposte della campagna esportate, 1 di un'altra campagna
+  esclusa); **non** verificato sul progetto reale
+
+## Survey evento — Riepilogo e checklist di test manuale
+
+Changelog del survey: passi 1-5 qui sopra. Verificato nel mio ambiente: `npm test` (20 test su
+punteggi e contenuto), `npm run test:rules` (36 test delle regole sull'emulatore), build, lint,
+flusso completo in Chromium headless con viewport da telefono (compilazione, ricarica a metà,
+"Indietro", errore di invio con "Riprova" senza Firestore raggiungibile) e rendering del
+risultato a 360/390/1280 px. **Non verificato**: sito pubblicato, Firestore reale, dispositivi veri.
+
+Da fare prima dell'evento:
+- [ ] Sostituire i segnaposto in `src/survey/frasi.js` e il testo `INFORMATIVA_PRIVACY` in
+      `src/survey/content.js` (aggiornando `VERSIONE_TESTO_CONSENSO`)
+- [ ] Verificare la regione del database Firestore; se non è in UE creare un progetto separato
+      e impostare le `VITE_SURVEY_FIREBASE_*` nelle variabili di build di Cloudflare
+- [ ] Pubblicare `firestore.rules` (passo 4)
+- [ ] Generare il QR verso `https://<dominio>/survey`
+
+Checklist su dispositivi reali (sito pubblicato):
+1. **Compilazione completa da smartphone** (iOS e Android): QR → `/survey` → consensi →
+   anagrafica → 7 dimensioni → risultato. Controlla leggibilità delle ancore e del radar
+2. **Ricarica a metà**: alla dimensione 4 ricarica o chiudi e riapri il browser → riparti da lì
+   con tutte le risposte
+3. **Perdita di rete e "Riprova"**: arrivato all'ultima dimensione attiva la modalità aereo e
+   premi "Invia e vedi il risultato" → dopo circa 20 s compare "Invio non riuscito" con
+   "Riprova"; togli la modalità aereo, premi "Riprova" → compare il risultato. In Console
+   Firebase → Firestore deve esserci **un solo** documento per quella compilazione
+4. **Riapertura dopo il completamento**: riapri `/survey` sullo stesso telefono → risultato
+   subito, niente questionario. Su un altro dispositivo si parte da capo
+5. **Lettura bloccata**: da un PC apri il sito, console del browser (F12) e incolla:
+
+   ```js
+   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js')
+   const fs = await import('https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js')
+   const app = initializeApp({ apiKey: '<VITE_FIREBASE_API_KEY>', projectId: '<PROJECT_ID>' }, 'prova')
+   const db = fs.getFirestore(app)
+   await fs.getDocs(fs.collection(db, 'survey_risposte'))   // deve dare "Missing or insufficient permissions"
+   await fs.getDocs(fs.collection(db, 'tavoli'))            // deve funzionare (game aperto)
+   ```
+
+   (usa le chiavi del progetto del survey, se separato)
+6. **Il game funziona come prima**: `/`, `/config`, `/tavolo/1`, `/regia`, `/dashboard` — apri e
+   chiudi un round, invia una scelta, controlla che la Dashboard si aggiorni
+7. **Nessun link al survey** nelle viste del game
+8. **Export**: dopo qualche compilazione di prova lancia lo script (passo 5) e controlla il
+   riepilogo; poi cancella dalla Console i documenti di prova prima dell'evento

@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Survey: credenziali Admin SDK ed export con dati personali (mai nel repo)
+survey_export.json
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+credenziali/
