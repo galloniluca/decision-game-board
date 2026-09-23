@@ -367,3 +367,38 @@ Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
 ### Come testare
 
 1. `npm test`: devono passare tutti i test
+
+## Survey evento — Passo 2: schermate di compilazione
+
+- Nuova route pubblica **`/survey`** (non linkata da nessuna vista del game). In `App.jsx` il game è
+  stato spostato in un componente `Game` identico a prima (stesse route, stessa inizializzazione
+  dei dati): `/survey` è l'unica route che **non** passa da `assicuraDatiIniziali()` e viene
+  caricata a parte (lazy), così un partecipante non tocca le collezioni del game
+- `src/survey/firebaseSurvey.js`: istanza Firebase dedicata `initializeApp(config, 'survey')`.
+  Se è valorizzata `VITE_SURVEY_FIREBASE_PROJECT_ID` usa **tutte** le `VITE_SURVEY_FIREBASE_*`,
+  altrimenti ricade in blocco sulle `VITE_FIREBASE_*` del game (vedi `.env.example`)
+- Flusso: benvenuto e consenso (informativa segnaposto, 3 caselle non preselezionate, le prime 2
+  obbligatorie) → anagrafica (tutti obbligatori, email validata) → 7 schermate da 3 domande con
+  barra "Dimensione X di 7", 5 opzioni a tutta larghezza con badge 1-5; "Avanti" attivo solo con
+  3 risposte, "Indietro" sempre disponibile
+- Tutto lo stato è salvato in `localStorage` (chiave `survey:2026-09-29-belforte`) a ogni modifica:
+  un ricaricamento riprende dalla stessa schermata con le stesse risposte
+- Invio: **un solo documento** in `survey_risposte`, scritto alla fine con `creato_at` = timestamp
+  del server. L'id è generato sul client e riusato nei tentativi, così "Riprova" non crea
+  duplicati. Senza rete l'SDK non dà errore ma resta in attesa: dopo 20 secondi compare il
+  messaggio di errore con "Riprova" (le risposte restano sul dispositivo)
+- Stili in `src/index.css` (sezione "Survey evento", classi `.survey-*`), riusando card, bottoni e
+  `.option-btn` del game. Nota: l'app ha un solo tema (scuro), il survey usa quello
+
+### Come testare
+
+1. Apri `/survey` da smartphone: "Inizia" resta disattivo finché non spunti i due consensi
+   obbligatori
+2. Anagrafica: premi "Avanti" a campi vuoti → errori sotto ogni campo; email senza `@` → "Email
+   non valida"
+3. Dimensioni: "Avanti" disattivo finché non rispondi alle 3 domande; "Indietro" mantiene le
+   risposte date
+4. A metà (es. dimensione 3) **ricarica la pagina**: devi ritrovarti sulla stessa dimensione con
+   le risposte selezionate
+5. Le route del game (`/`, `/config`, `/tavolo/1`, `/regia`, `/dashboard`) devono comportarsi
+   esattamente come prima
