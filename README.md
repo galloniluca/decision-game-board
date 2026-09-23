@@ -343,3 +343,27 @@ distribuzione dichiarata nel documento ufficiale, quindi l'interpretazione è co
 4. Chiudi il round da `/regia`: la dashboard deve mostrare "In attesa che la regia apra il round..."
    finché non ne apri uno nuovo (a meno che "Mostra risultati" non sia già attivo)
 
+
+## Survey evento — Passo 1: contenuto e calcolo punteggi
+
+Questionario pubblico "Lean nell'era dell'incertezza" per l'evento del 29 settembre 2026.
+Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
+
+- `src/survey/content.js`: 7 dimensioni × 3 domande × 5 ancore trascritte alla lettera dalla
+  specifica, più anagrafica (settori, dimensioni aziendali), testi dei consensi, costante
+  `CAMPAGNA` (`2026-09-29-belforte`) e `VERSIONE_TESTO_CONSENSO`
+- `src/survey/frasi.js`: 35 frasi di lettura (7 dimensioni × 5 fasce), per ora **segnaposto**
+  `[[FRASE dX fascia N]]` da sostituire con i testi definitivi mantenendo la struttura
+- `src/survey/scoring.js`: modulo puro (niente React/Firebase) con punteggio per dimensione
+  `(media-1)/4*100`, totale (media delle 7), livello/fascia sul valore arrotondato, punti di forza e
+  aree di attenzione (a parità vince l'ordine d1...d7; le attenzioni si scelgono tra le dimensioni
+  non già "forza", così le due liste non si sovrappongono mai, nemmeno con molti pari merito)
+- Test unitari con il test runner integrato di Node (nessuna nuova dipendenza): `npm test`
+  - `scoring.test.js`: tutte 1 / tutte 5, confini 20/21, 40/41, 60/61, 80/81 (sia su valori
+    diretti sia da risposte reali), pari merito
+  - `content.test.js`: confronta `content.js` con il testo di `SURVEY_SPEC.md`, così un refuso
+    nella trascrizione fa fallire il test
+
+### Come testare
+
+1. `npm test`: devono passare tutti i test
