@@ -39,6 +39,10 @@ export const SETTORI = [
 
 export const DIMENSIONI_AZIENDA = ['Fino a 50 dipendenti', '51-250 dipendenti', 'Oltre 250 dipendenti']
 
+// Messaggio in fondo alla schermata del risultato (testo esatto dalla specifica, sezione 4).
+export const MESSAGGIO_FINALE =
+  'Ti arriverà via mail la tua situazione rispetto al benchmark di riferimento del tuo settore e della media di tutte le aziende.'
+
 // Campi anagrafica, nell'ordine di visualizzazione.
 export const CAMPI_ANAGRAFICA = [
   { id: 'nome', etichetta: 'Nome e cognome', tipo: 'text', autocomplete: 'name' },

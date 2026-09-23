@@ -59,3 +59,9 @@ test('frasi.js: una frase per ogni dimensione e fascia', () => {
     }
   }
 })
+
+test('messaggio finale identico alla specifica', async () => {
+  const { MESSAGGIO_FINALE } = await import('./content.js')
+  const testo = readFileSync(new URL('../../SURVEY_SPEC.md', import.meta.url), 'utf8')
+  assert.ok(testo.includes(`esattamente: "${MESSAGGIO_FINALE}"`))
+})

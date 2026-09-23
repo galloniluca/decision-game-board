@@ -402,3 +402,24 @@ Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
    le risposte selezionate
 5. Le route del game (`/`, `/config`, `/tavolo/1`, `/regia`, `/dashboard`) devono comportarsi
    esattamente come prima
+
+## Survey evento — Passo 3: schermata del risultato
+
+- Dopo l'invio riuscito lo stato viene segnato come completato in `localStorage`: riaprendo
+  `/survey` sullo stesso dispositivo si rivede direttamente il risultato, senza ricompilare
+- Schermata, dall'alto: saluto con nome e azienda; punteggio complessivo in grande con il nome
+  del livello; radar a 7 assi (0-100%, una sola serie) in **SVG scritto a mano**
+  (`src/survey/Radar.jsx`, nessuna libreria nuova; gli anelli della griglia sono i confini delle
+  fasce 20/40/60/80/100); blocchi "Punti di forza" e "Aree di attenzione" con nome della
+  dimensione e frase da `frasi.js[dimensione][fascia]`; messaggio finale esatto della specifica
+  (in `content.js`, verificato da un test)
+- Nessun numero per singola dimensione, nessuna risposta, nessun benchmark né data di arrivo
+
+### Come testare
+
+1. Completa il questionario: dopo l'invio compare il risultato con il tuo nome e l'azienda
+2. Con risposte tutte "1" il totale è 0% Iniziale, tutte "5" 100% Eccellente, tutte "3" 50%
+   Strutturato
+3. Controlla che il radar sia leggibile da smartphone (etichette dentro la card) e da desktop
+4. Chiudi e riapri `/survey` sullo stesso telefono: rivedi il risultato, non il questionario
+5. Finché `frasi.js` ha i segnaposto, sotto ogni dimensione compare `[[FRASE dX fascia N]]`
