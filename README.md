@@ -423,3 +423,47 @@ Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
 3. Controlla che il radar sia leggibile da smartphone (etichette dentro la card) e da desktop
 4. Chiudi e riapri `/survey` sullo stesso telefono: rivedi il risultato, non il questionario
 5. Finché `frasi.js` ha i segnaposto, sotto ogni dimensione compare `[[FRASE dX fascia N]]`
+
+## Survey evento — Passo 4: regole di sicurezza Firestore
+
+Stato di partenza: nel `firestore.rules` del repo **non c'era** una regola generica
+`match /{document=**}`, solo le 4 regole esplicite del game. Le regole però si pubblicano a mano
+dalla console Firebase (il repo non ha `firebase.json`), quindi **quelle attive nel progetto
+possono essere diverse dal file**: vanno controllate e sostituite (vedi sotto).
+
+- Game (`tavoli`, `opzioni`, `sessione`, `scelte`): `allow read, write: if true`, **invariato**
+- `survey_risposte`: `allow read, update, delete: if false`; `allow create` solo se il documento
+  ha esattamente i campi `campagna, creato_at, consenso, anagrafica, risposte, punteggi` e:
+  - `creato_at` è il timestamp del server (`request.time`)
+  - `consenso` ha esattamente `privacy` e `benchmark_aggregato` a `true`, `contatto_bpr`
+    booleano, `versione_testo` stringa (max 50)
+  - `anagrafica` ha esattamente i 6 campi, stringhe non vuote (max 200), email in formato valido,
+    `settore` e `dimensione` tra i valori ammessi
+  - `risposte` ha esattamente le 21 chiavi `d1q1`...`d7q3`, interi da 1 a 5
+  - `punteggi` ha esattamente `d1`...`d7` e `totale`, numeri tra 0 e 100
+- Commento in testa al file: mai aggiungere una regola generica (le regole si sommano in OR)
+- Il documento scritto dal browser è costruito da `src/survey/documento.js`, lo stesso modulo usato
+  dal test delle regole: se le due cose divergono il test fallisce
+- `npm test` controlla anche che gli elenchi di settori e dimensioni nelle regole coincidano con
+  `content.js`
+
+### Test automatico delle regole (emulatore)
+
+`npm run test:rules` avvia l'emulatore Firestore (serve **Java**; `firebase-tools` viene scaricato
+con `npx`) ed esegue `tests/firestore.rules.test.mjs`: 36 casi, tra cui il game ancora aperto,
+creazione valida consentita, 25 varianti non valide rifiutate, lettura/lista/modifica/cancellazione
+di `survey_risposte` vietate. **Passano tutti sull'emulatore**; l'emulatore non è il progetto
+reale, per quello vale la checklist qui sotto.
+
+### Come pubblicare e testare (da fare a mano)
+
+1. Console Firebase → Firestore Database → **Regole**: copia da parte le regole attuali (backup)
+   e controlla se contengono una regola generica `match /{document=**}`
+2. Sostituisci **tutto** il contenuto con quello di `firestore.rules` e premi "Pubblica"
+   (in alternativa: `npx firebase-tools deploy --only firestore:rules --project <id>`)
+3. Nella stessa pagina, scheda "Rules Playground": simula una `get` su
+   `/survey_risposte/qualsiasi` → deve essere **negata**; una `get` su `/tavoli/1` → consentita
+4. Verifica che il game funzioni come prima: `/` (conteggi delle 4 collezioni), `/config`
+   (salva), `/tavolo/1` (invia una scelta), `/regia` (apri/chiudi round), `/dashboard`
+5. Se il survey usa un progetto Firebase separato (variabili `VITE_SURVEY_FIREBASE_*`), pubblica
+   lo stesso file anche lì

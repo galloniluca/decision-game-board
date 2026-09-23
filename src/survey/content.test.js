@@ -65,3 +65,14 @@ test('messaggio finale identico alla specifica', async () => {
   const testo = readFileSync(new URL('../../SURVEY_SPEC.md', import.meta.url), 'utf8')
   assert.ok(testo.includes(`esattamente: "${MESSAGGIO_FINALE}"`))
 })
+
+test('firestore.rules accetta esattamente settori e dimensioni di content.js', async () => {
+  const { SETTORI, DIMENSIONI_AZIENDA } = await import('./content.js')
+  const regole = readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8')
+  const elenco = (campo) => {
+    const m = regole.match(new RegExp(`a\\.${campo} in \\[([^\\]]*)\\]`))
+    return [...m[1].matchAll(/'([^']*)'/g)].map((x) => x[1])
+  }
+  assert.deepEqual(elenco('settore'), SETTORI)
+  assert.deepEqual(elenco('dimensione'), DIMENSIONI_AZIENDA)
+})

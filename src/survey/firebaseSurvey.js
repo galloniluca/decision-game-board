@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app'
-import { doc, collection, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
-import { CAMPAGNA, VERSIONE_TESTO_CONSENSO } from './content'
-import { calcolaPunteggi } from './scoring'
+import { doc, collection, getFirestore, setDoc } from 'firebase/firestore'
+import { costruisciDocumento } from './documento'
 
 // Istanza Firebase dedicata al survey (nome 'survey'), separata da quella del game.
 // Se VITE_SURVEY_FIREBASE_PROJECT_ID è valorizzata si usano tutte le VITE_SURVEY_FIREBASE_*,
@@ -49,30 +48,6 @@ function conTimeout(promessa) {
     }, TIMEOUT_INVIO_MS)
   })
   return Promise.race([promessa, scadenza]).finally(() => clearTimeout(timer))
-}
-
-export function costruisciDocumento({ consenso, anagrafica, risposte }) {
-  const pulisci = (s) => String(s ?? '').trim()
-  return {
-    campagna: CAMPAGNA,
-    creato_at: serverTimestamp(),
-    consenso: {
-      privacy: consenso.privacy === true,
-      benchmark_aggregato: consenso.benchmark_aggregato === true,
-      contatto_bpr: consenso.contatto_bpr === true,
-      versione_testo: VERSIONE_TESTO_CONSENSO,
-    },
-    anagrafica: {
-      nome: pulisci(anagrafica.nome),
-      azienda: pulisci(anagrafica.azienda),
-      email: pulisci(anagrafica.email),
-      ruolo: pulisci(anagrafica.ruolo),
-      settore: anagrafica.settore,
-      dimensione: anagrafica.dimensione,
-    },
-    risposte: { ...risposte },
-    punteggi: calcolaPunteggi(risposte),
-  }
 }
 
 // Scrive l'unico documento del questionario. Restituisce una promessa che si risolve
