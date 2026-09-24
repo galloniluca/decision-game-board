@@ -3,8 +3,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { DIMENSIONI, ID_DOMANDE } from './content.js'
-import FRASI from './frasi.js'
-import { ID_DIMENSIONI, tuttiIdDomande } from './scoring.js'
+import { FRASI, LIVELLI as NOMI_LIVELLI, TITOLO_BLOCCO_AVANTI, TITOLO_BLOCCO_MARGINE } from './frasi.js'
+import { ID_DIMENSIONI, LIVELLI, tuttiIdDomande } from './scoring.js'
 
 // Estrae dimensioni, domande e ancore dalla sezione 3 di SURVEY_SPEC.md.
 function leggiSpecifica() {
@@ -75,4 +75,27 @@ test('firestore.rules accetta esattamente settori e dimensioni di content.js', a
   }
   assert.deepEqual(elenco('settore'), SETTORI)
   assert.deepEqual(elenco('dimensione'), DIMENSIONI_AZIENDA)
+})
+
+test('frasi.js riporta alla lettera FRASI_LETTURA.md (frasi, livelli, titoli)', () => {
+  const md = readFileSync(new URL('../../FRASI_LETTURA.md', import.meta.url), 'utf8')
+  const sezioni = md.split(/^### /m).slice(1)
+  assert.equal(sezioni.length, 7)
+  for (const sezione of sezioni) {
+    const id = sezione.slice(0, 2)
+    const righe = [...sezione.matchAll(/^\| ([1-5]) \| (.+) \|$/gm)]
+    assert.equal(righe.length, 5, id)
+    for (const [, fascia, testo] of righe) assert.equal(FRASI[id][fascia], testo, `${id} fascia ${fascia}`)
+  }
+  assert.ok(md.includes('`TITOLO_BLOCCO_AVANTI`: ' + TITOLO_BLOCCO_AVANTI + '\n'))
+  assert.ok(md.includes('`TITOLO_BLOCCO_MARGINE`: ' + TITOLO_BLOCCO_MARGINE + '\n'))
+  for (let f = 1; f <= 5; f++) assert.ok(md.includes(`| ${f} | ${NOMI_LIVELLI[f]} |`))
+  assert.ok(!JSON.stringify(FRASI).includes('[[FRASE'), 'nessun segnaposto rimasto')
+})
+
+test('nomi dei livelli uguali in frasi.js e scoring.js', () => {
+  assert.deepEqual(
+    LIVELLI.map((l) => l.nome),
+    [1, 2, 3, 4, 5].map((f) => NOMI_LIVELLI[f])
+  )
 })

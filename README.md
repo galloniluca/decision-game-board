@@ -422,7 +422,6 @@ Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
    Strutturato
 3. Controlla che il radar sia leggibile da smartphone (etichette dentro la card) e da desktop
 4. Chiudi e riapri `/survey` sullo stesso telefono: rivedi il risultato, non il questionario
-5. Finché `frasi.js` ha i segnaposto, sotto ogni dimensione compare `[[FRASE dX fascia N]]`
 
 ## Survey evento — Passo 4: regole di sicurezza Firestore
 
@@ -491,15 +490,16 @@ reale, per quello vale la checklist qui sotto.
 
 ## Survey evento — Riepilogo e checklist di test manuale
 
-Changelog del survey: passi 1-5 qui sopra. Verificato nel mio ambiente: `npm test` (20 test su
+Changelog del survey: passi 1-5 qui sopra. Verificato nel mio ambiente: `npm test` (22 test su
 punteggi e contenuto), `npm run test:rules` (36 test delle regole sull'emulatore), build, lint,
 flusso completo in Chromium headless con viewport da telefono (compilazione, ricarica a metà,
 "Indietro", errore di invio con "Riprova" senza Firestore raggiungibile) e rendering del
 risultato a 360/390/1280 px. **Non verificato**: sito pubblicato, Firestore reale, dispositivi veri.
 
 Da fare prima dell'evento:
-- [ ] Sostituire i segnaposto in `src/survey/frasi.js` e il testo `INFORMATIVA_PRIVACY` in
-      `src/survey/content.js` (aggiornando `VERSIONE_TESTO_CONSENSO`)
+- [x] Frasi di lettura definitive in `src/survey/frasi.js` (da `FRASI_LETTURA.md`)
+- [ ] Sostituire il testo `INFORMATIVA_PRIVACY` in `src/survey/content.js` (aggiornando
+      `VERSIONE_TESTO_CONSENSO`)
 - [ ] Verificare la regione del database Firestore; se non è in UE creare un progetto separato
       e impostare le `VITE_SURVEY_FIREBASE_*` nelle variabili di build di Cloudflare
 - [ ] Pubblicare `firestore.rules` (passo 4)
@@ -533,3 +533,22 @@ Checklist su dispositivi reali (sito pubblicato):
 7. **Nessun link al survey** nelle viste del game
 8. **Export**: dopo qualche compilazione di prova lancia lo script (passo 5) e controlla il
    riepilogo; poi cancella dalla Console i documenti di prova prima dell'evento
+
+## Survey evento — Frasi di lettura definitive
+
+- `FRASI_LETTURA.md` (testi approvati) aggiunto nella radice accanto a `SURVEY_SPEC.md`, che è
+  aggiornata alla nuova versione
+- `src/survey/frasi.js` generato da quel file senza toccare i testi: export
+  `TITOLO_BLOCCO_AVANTI`, `TITOLO_BLOCCO_MARGINE`, `LIVELLI`, `FRASI`
+- I due blocchi del risultato ora si chiamano **"Dove sei più avanti"** e **"Dove c'è margine di
+  miglioramento"** (presi da `frasi.js`). Come tutti i titoli di sezione dell'app sono mostrati in
+  maiuscolo dal CSS; il testo resta quello del file
+- Nuovi test: ogni frase, i titoli e i nomi dei livelli di `frasi.js` devono coincidere
+  carattere per carattere con `FRASI_LETTURA.md` (anche un apostrofo tipografico al posto di quello
+  dritto fa fallire il test); i nomi dei livelli devono coincidere con quelli di `scoring.js`
+
+### Come testare
+
+1. `npm test`: 22 test verdi
+2. Completa il questionario: sotto "Dove sei più avanti" e "Dove c'è margine di miglioramento"
+   compaiono le frasi vere della fascia di ciascuna dimensione (nessun `[[FRASE ...]]`)

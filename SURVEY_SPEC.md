@@ -4,7 +4,7 @@ Questionario online "Lean nell'era dell'incertezza" da inserire nell'app esisten
 Evento: 29 settembre 2026, Campus Nuova Simonelli, Belforte del Chienti. Circa 50 partecipanti.
 Lingua: italiano. Uso primario: smartphone, aperto da QR code.
 
-Stato: struttura, domande e logica del risultato approvate. Le frasi di lettura (`frasi.js`) e il testo di informativa privacy sono da fornire (vedi sezione 9).
+Stato: struttura, domande, logica del risultato e frasi di lettura approvate. Le frasi sono fornite già pronte nel file `FRASI_LETTURA.md`, da mettere accanto a questa specifica; resta da fornire solo il testo di informativa privacy (vedi sezione 9).
 
 ---
 
@@ -216,14 +216,14 @@ Calcoli in un modulo puro `src/survey/scoring.js`, senza dipendenze da React, co
   - 41-60% = Strutturato (fascia 3)
   - 61-80% = Consolidato (fascia 4)
   - 81-100% = Eccellente (fascia 5)
-- **Punti di forza**: le 2 dimensioni con punteggio più alto. **Aree di attenzione**: le 2 con punteggio più basso. A parità di punteggio vince l'ordine di dimensione d1...d7. Sono 7 dimensioni, quindi le due liste non si sovrappongono.
+- **Dove sei più avanti**: le 2 dimensioni con punteggio più alto. **Dove c'è margine di miglioramento**: le 2 con punteggio più basso. A parità di punteggio vince l'ordine di dimensione d1...d7. Sono 7 dimensioni, quindi le due liste non si sovrappongono.
 
 Schermata del risultato, dall'alto in basso:
 
 1. Saluto con nome e azienda.
 2. Punteggio complessivo in grande (es. 58%) con il nome del livello.
 3. Radar a 7 assi, scala 0-100%, una sola serie (il partecipante). Realizzarlo in SVG scritto a mano, senza librerie di grafici nuove. Etichette brevi degli assi: Lean e flussi; Miglioramento continuo; Governance; Decisioni e trade-off; Digitalizzazione; Intelligenza artificiale; Persone e leadership.
-4. Blocco "Punti di forza" e blocco "Aree di attenzione": per ciascuna delle 2 dimensioni, nome e frase di lettura presa da `frasi.js[dimensione][fascia]`.
+4. Blocco "Dove sei più avanti" e blocco "Dove c'è margine di miglioramento" (titoli esportati da `src/survey/frasi.js` come `TITOLO_BLOCCO_AVANTI` e `TITOLO_BLOCCO_MARGINE`): per ciascuna delle 2 dimensioni, nome e frase di lettura presa da `FRASI[dimensione][fascia]`.
 5. Messaggio finale, esattamente: "Ti arriverà via mail la tua situazione rispetto al benchmark di riferimento del tuo settore e della media di tutte le aziende."
 
 Non mostrare il dettaglio numerico per dimensione né le singole risposte. Non mostrare nessun benchmark. Non indicare date di arrivo del benchmark.
@@ -278,7 +278,7 @@ Script `scripts/export-survey.mjs` (Node), da lanciare a mano, con `firebase-adm
 
 ## 9. Elementi ancora da fornire
 
-- `src/survey/frasi.js`: 35 frasi di lettura (7 dimensioni × 5 fasce), in formato `{ d1: { 1: "...", 2: "...", ... 5: "..." }, ... }`. Nel frattempo creare il file con segnaposto del tipo `"[[FRASE d1 fascia 1]]"` e gestire la struttura; le frasi vere arrivano a parte.
+- `src/survey/frasi.js`: le frasi sono FORNITE e definitive in `FRASI_LETTURA.md` (35 frasi, nomi dei 5 livelli, titoli dei due blocchi). Generare `src/survey/frasi.js` a partire da quel file, con la struttura indicata in fondo al file stesso. Non riscrivere né riformulare le frasi.
 - Testo dell'informativa privacy (sezione 5).
 - Verificare la regione del database Firestore del progetto attuale: se non è in UE, usare un progetto Firebase separato in UE per il survey.
 

@@ -1,5 +1,5 @@
 import { DIMENSIONI, MESSAGGIO_FINALE } from './content'
-import { frase } from './frasi'
+import { TITOLO_BLOCCO_AVANTI, TITOLO_BLOCCO_MARGINE, frase } from './frasi'
 import { arrotonda, calcolaPunteggi, forzeEAttenzioni, livello } from './scoring'
 import Radar from './Radar'
 
@@ -45,8 +45,8 @@ function Risultato({ anagrafica, risposte }) {
         <p className="status-muted survey-radar-nota">Centro 0%, bordo esterno 100%.</p>
       </section>
 
-      <BloccoDimensioni titolo="Punti di forza" ids={forze} punteggi={punteggi} />
-      <BloccoDimensioni titolo="Aree di attenzione" ids={attenzioni} punteggi={punteggi} />
+      <BloccoDimensioni titolo={TITOLO_BLOCCO_AVANTI} ids={forze} punteggi={punteggi} />
+      <BloccoDimensioni titolo={TITOLO_BLOCCO_MARGINE} ids={attenzioni} punteggi={punteggi} />
 
       <section className="card survey-messaggio-finale">
         <p>{MESSAGGIO_FINALE}</p>

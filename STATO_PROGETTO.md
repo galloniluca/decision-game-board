@@ -78,7 +78,7 @@ Le 5 pagine dell'app:
 - [ ] **Stampa QR**: generati in Config, da stampare e posizionare fisicamente sui tavoli
 - [ ] Verificare le dimensioni della Dashboard sullo schermo/TV reale che verrà usato il giorno dell'evento (finora validato solo via screenshot simulati a 1920×1080 e 1366×768)
 
-- [ ] **Survey: frasi di lettura** — sostituire i 35 segnaposto in `src/survey/frasi.js`
+- [x] **Survey: frasi di lettura** — definitive in `src/survey/frasi.js`, generate da `FRASI_LETTURA.md`
 - [ ] **Survey: informativa privacy** — testo in `INFORMATIVA_PRIVACY` (`src/survey/content.js`), incrementando `VERSIONE_TESTO_CONSENSO`
 - [ ] **Survey: regione Firestore** — se il database attuale non è in UE, creare un progetto separato in UE e valorizzare le `VITE_SURVEY_FIREBASE_*` su Cloudflare
 - [ ] **Survey: pubblicare `firestore.rules`** dalla console Firebase (e nel progetto survey, se separato) e rifare il test del game
