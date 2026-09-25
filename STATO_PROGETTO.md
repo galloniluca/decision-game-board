@@ -26,6 +26,7 @@ Le 5 pagine dell'app:
 | Regia | `/regia` | Il tuo pannello di controllo durante l'evento |
 | Dashboard TV | `/dashboard` | Da proiettare, visibile a tutti i tavoli; a fine partita mostra il QR del survey |
 | Survey | `/survey` | Questionario pubblico per i partecipanti (QR a fine partita in Dashboard) |
+| Risultati survey | `/survey-risultati#chiave=…` | Riservata: chi ha risposto, risultati, benchmark, download CSV/JSON |
 
 ## Stack tecnico
 
@@ -83,6 +84,7 @@ Le 5 pagine dell'app:
 - [ ] **Survey: informativa privacy** — testo in `INFORMATIVA_PRIVACY` (`src/survey/content.js`), incrementando `VERSIONE_TESTO_CONSENSO`
 - [ ] **Survey: regione Firestore** — se il database attuale non è in UE, creare un progetto separato in UE e valorizzare le `VITE_SURVEY_FIREBASE_*` su Cloudflare
 - [ ] **Survey: pubblicare `firestore.rules`** dalla console Firebase (e nel progetto survey, se separato) e rifare il test del game
+- [ ] **Risultati survey: attivare Email/Password e creare l'utente `risultati-survey@example.com`** in Firebase Authentication (vedi README), poi ripubblicare `firestore.rules`
 - [ ] **Survey: checklist di test manuale** nel README, da dispositivi reali
 - [ ] **Survey: QR code** verso `https://<dominio>/survey`
 

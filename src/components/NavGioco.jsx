@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 
 // Navigazione comune alle viste di gestione (Home, Config, Regia, Dashboard):
-// ogni pagina mostra i link a tutte le altre, compreso il survey.
+// ogni pagina mostra i link a tutte le altre, compresi il survey e i suoi risultati (riservati).
 const VOCI = [
   { to: '/', etichetta: 'Home' },
   { to: '/config', etichetta: 'Config' },
   { to: '/regia', etichetta: 'Regia' },
   { to: '/dashboard', etichetta: 'Dashboard TV' },
   { to: '/survey', etichetta: 'Survey' },
+  { to: '/survey-risultati', etichetta: 'Risultati survey' },
 ]
 
 function NavGioco({ corrente }) {

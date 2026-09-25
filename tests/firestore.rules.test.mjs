@@ -20,6 +20,7 @@ import {
 } from 'firebase/firestore'
 import { costruisciDocumento } from '../src/survey/documento.js'
 import { tuttiIdDomande } from '../src/survey/scoring.js'
+import { EMAIL_RISULTATI } from '../src/survey/accesso.js'
 
 let env
 let db
@@ -125,7 +126,7 @@ describe('survey_risposte: creazione', () => {
   }
 })
 
-describe('survey_risposte: nessuna lettura, modifica o cancellazione', () => {
+describe('survey_risposte: nessuna lettura, modifica o cancellazione (utenti non riservati)', () => {
   let rif
   beforeEach(async () => {
     rif = doc(db, 'survey_risposte', 'esistente')
@@ -152,5 +153,46 @@ describe('survey_risposte: nessuna lettura, modifica o cancellazione', () => {
 
   test('cancellazione vietata', async () => {
     await assertFails(deleteDoc(rif))
+  })
+})
+
+describe('survey_risposte: utente riservato della pagina risultati', () => {
+  const token = (email, provider = 'password') => ({ email, firebase: { sign_in_provider: provider } })
+  let admin
+  let altro
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'survey_risposte', 'esistente'), { campagna: 'x' })
+    )
+    admin = env.authenticatedContext('admin-uid', token(EMAIL_RISULTATI)).firestore()
+    altro = env.authenticatedContext('altro-uid', token('qualcuno@example.org')).firestore()
+  })
+
+  test('può leggere documento e collezione (anche con filtro per campagna)', async () => {
+    await assertSucceeds(getDoc(doc(admin, 'survey_risposte', 'esistente')))
+    await assertSucceeds(getDocs(collection(admin, 'survey_risposte')))
+    await assertSucceeds(
+      getDocs(query(collection(admin, 'survey_risposte'), where('campagna', '==', 'x')))
+    )
+  })
+
+  test('non può modificare né cancellare', async () => {
+    const rif = doc(admin, 'survey_risposte', 'esistente')
+    await assertFails(updateDoc(rif, { campagna: 'y' }))
+    await assertFails(deleteDoc(rif))
+  })
+
+  test('un altro utente autenticato non può leggere', async () => {
+    await assertFails(getDoc(doc(altro, 'survey_risposte', 'esistente')))
+    await assertFails(getDocs(collection(altro, 'survey_risposte')))
+  })
+
+  test('stessa email ma accesso non da password (es. Google) non può leggere', async () => {
+    const google = env.authenticatedContext('g-uid', token(EMAIL_RISULTATI, 'google.com')).firestore()
+    await assertFails(getDocs(collection(google, 'survey_risposte')))
+  })
+
+  test('le collezioni del game restano aperte anche da autenticato', async () => {
+    await assertSucceeds(setDoc(doc(admin, 'tavoli', 'x'), { a: 1 }))
   })
 })

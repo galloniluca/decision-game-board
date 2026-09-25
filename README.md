@@ -580,3 +580,67 @@ diceva di non linkarlo: decisione cambiata).
 3. Inquadra il QR con un telefono: si apre `/survey`
 4. Attiva "Mostra risultati": compaiono le schede dei tavoli (niente QR); disattivalo: torna il QR
 5. Tavolo e Survey non mostrano link alle pagine di gestione
+
+## Risultati survey (`/survey-risultati`, pagina riservata)
+
+Pagina per vedere durante e dopo l'evento chi ha risposto, i risultati di ciascuno, il benchmark
+e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia e Dashboard.
+
+- **Accesso con link riservato**: `https://<dominio>/survey-risultati#chiave=<CHIAVE>`. La chiave
+  è la password di un utente Firebase dedicato (`risultati-survey@example.com`, un identificativo,
+  non una casella reale) e **non sta nel codice**. Aprendo il link la pagina accede e toglie
+  subito la chiave dalla barra degli indirizzi; su quel browser l'accesso resta attivo finché non
+  premi "Esci". Senza link si può anche inserire la chiave a mano
+- **Perché non basta un link segreto**: la pagina legge da Firestore dal browser; senza un utente
+  autenticato le regole dovrebbero aprire la lettura a tutti, e chiunque potrebbe leggere nomi ed
+  email senza nemmeno conoscere il link. Così invece Firestore dà le risposte solo a quell'utente
+- **Cosa mostra** (aggiornato in tempo reale):
+  - numero di risposte, maturità media, quanti vogliono essere contattati
+  - benchmark: media di tutte le aziende sulle 7 dimensioni (radar + tabella), confrontabile
+    con la media di un settore (con avviso se il settore ha meno di 3 risposte)
+  - conteggi e media per settore e per dimensione aziendale
+  - elenco partecipanti (ricerca per nome, azienda, email, settore, ruolo); cliccando una riga si
+    apre il dettaglio: dati, punteggio e fascia per dimensione, radar del partecipante contro la
+    media del suo settore (o di tutte, se è l'unico del settore)
+  - download **CSV** (separatore `;`, si apre direttamente con Excel in italiano) e **JSON**
+- I punteggi sono sempre **ricalcolati dalle risposte** (`src/survey/risultati.js`, con test)
+- I colori delle due serie dei radar di confronto sono verificati per il daltonismo; la seconda
+  serie ha anche marcatori quadrati e area senza riempimento, più legenda
+- Il codice di accesso (Firebase Authentication) viene caricato solo da questa pagina: il
+  questionario dei partecipanti resta leggero
+
+### Da fare una volta nella console Firebase (progetto del survey)
+
+1. **Authentication** → "Inizia" (se non è già attivo) → scheda **Metodo di accesso** →
+   **Email/password** → Attiva → Salva (il "link via email" lascialo spento)
+2. Scheda **Utenti** → **Aggiungi utente**: email `risultati-survey@example.com`, password =
+   una chiave lunga scelta da te (almeno 20 caratteri, solo lettere e numeri, così il link resta
+   pulito). Se la console risponde che l'email esiste già, fermati e avvisa: qualcuno l'ha creata
+   prima di te
+3. Consigliato: **Authentication → Impostazioni → Azioni utente** → togli la spunta a
+   "Abilita creazione (registrazione)", così nessuno può creare altri account dal browser
+4. **Firestore Database → Regole**: incolla la versione aggiornata di `firestore.rules` e
+   pubblica (sostituisce quella del passo 4 del survey)
+5. Il tuo link riservato è `https://decision-game-board.galloni-luca.workers.dev/survey-risultati#chiave=<la password>`:
+   salvalo nei preferiti o in un password manager, **non** in chat o documenti condivisi
+
+### Test
+
+- Automatici: `npm test` (29 test, compresi aggregazioni ed export CSV/JSON) e
+  `npm run test:rules` (41 test: l'utente riservato può leggere ma non modificare/cancellare; un
+  altro utente autenticato, lo stesso indirizzo con accesso Google o un visitatore anonimo non
+  possono leggere; il game resta aperto)
+- Verificato in locale sugli emulatori Firestore + Authentication con Chromium headless: un
+  partecipante compila e invia dal browser, la chiave sbagliata è rifiutata, il link con la chiave
+  entra e la chiave sparisce dall'indirizzo, benchmark e dettaglio si vedono, CSV e JSON si
+  scaricano con tutte le risposte, l'accesso resta dopo il ricaricamento, "Esci" funziona, link
+  da Home e Regia, nessuno scorrimento orizzontale su telefono. **Non verificato sul progetto reale**
+
+Checklist manuale (dopo i passi in console):
+1. Apri il link riservato da PC: vedi le risposte (anche quelle di prova)
+2. Apri `/survey-risultati` da una finestra in incognito senza chiave: compare solo "Accesso
+   riservato"; una chiave sbagliata dà "Chiave non valida."
+3. Compila il survey da un telefono: la pagina risultati si aggiorna da sola (+1)
+4. Scarica il CSV e aprilo con Excel: colonne separate, accenti corretti
+5. Ripeti il punto 5 della checklist del survey (lettura dalla console del browser senza accesso:
+   deve fallire)

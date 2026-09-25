@@ -21,12 +21,21 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // ---- Survey: dal browser si può solo CREARE un documento valido.
-    // Lettura, modifica e cancellazione sono vietate: i dati si leggono solo con lo script
-    // scripts/export-survey.mjs (Admin SDK, che non passa da queste regole).
+    // ---- Survey: dal browser chiunque può solo CREARE un documento valido.
+    // Leggere è permesso solo all'utente riservato della pagina /survey-risultati
+    // (Firebase Authentication, Email/Password, vedi src/survey/accesso.js).
+    // Modifica e cancellazione sono vietate a tutti. Lo script scripts/export-survey.mjs
+    // usa l'Admin SDK, che non passa da queste regole.
     match /survey_risposte/{id} {
-      allow read, update, delete: if false;
+      allow read: if utenteRisultati();
+      allow update, delete: if false;
       allow create: if rispostaSurveyValida(request.resource.data);
+    }
+
+    function utenteRisultati() {
+      return request.auth != null
+        && request.auth.token.email == 'risultati-survey@example.com'
+        && request.auth.token.firebase.sign_in_provider == 'password';
     }
 
     function testo(v, max) {

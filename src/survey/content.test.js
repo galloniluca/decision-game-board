@@ -99,3 +99,9 @@ test('nomi dei livelli uguali in frasi.js e scoring.js', () => {
     [1, 2, 3, 4, 5].map((f) => NOMI_LIVELLI[f])
   )
 })
+
+test('firestore.rules usa la stessa email riservata di accesso.js', async () => {
+  const { EMAIL_RISULTATI } = await import('./accesso.js')
+  const regole = readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8')
+  assert.ok(regole.includes(`request.auth.token.email == '${EMAIL_RISULTATI}'`))
+})

@@ -10,6 +10,7 @@ import { assicuraDatiIniziali } from './lib/seed'
 // Il survey è una pagina pubblica indipendente dal game: caricata a parte e senza
 // passare dall'inizializzazione dei dati del game.
 const Survey = lazy(() => import('./survey/Survey'))
+const SurveyRisultati = lazy(() => import('./survey/SurveyRisultati'))
 
 function Game() {
   const [seedErrore, setSeedErrore] = useState(null)
@@ -54,6 +55,14 @@ function App() {
         element={
           <Suspense fallback={<div className="page" />}>
             <Survey />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/survey-risultati"
+        element={
+          <Suspense fallback={<div className="page" />}>
+            <SurveyRisultati />
           </Suspense>
         }
       />

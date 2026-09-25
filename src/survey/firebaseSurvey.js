@@ -23,8 +23,9 @@ if (!config.apiKey || !config.projectId) {
   console.error(`Configurazione Firebase del survey mancante: verifica le variabili ${prefisso}*`)
 }
 
-const app = initializeApp(config, 'survey')
-const db = getFirestore(app)
+export const appSurvey = initializeApp(config, 'survey')
+export const dbSurvey = getFirestore(appSurvey)
+const db = dbSurvey
 
 export const COLLEZIONE_SURVEY = 'survey_risposte'
 
