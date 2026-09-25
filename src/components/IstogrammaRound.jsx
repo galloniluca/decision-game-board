@@ -5,7 +5,7 @@ const CLASSE_LIVELLO = { rosso: 'h-basso', giallo: 'h-medio', verde: 'h-alto' }
 function IstogrammaRound({ etichetta, totali, grande = false }) {
   return (
     <div className={`istogramma-round${grande ? ' istogramma-round--grande' : ''}`}>
-      <span className="istogramma-round__label">{etichetta}</span>
+      {etichetta && <span className="istogramma-round__label">{etichetta}</span>}
       <div className="istogramma-round__barre">
         {KPI_CHIAVI.map((kpi) => {
           const stato = semaforo(totali[kpi])

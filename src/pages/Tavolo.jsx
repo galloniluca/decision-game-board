@@ -168,7 +168,7 @@ function Tavolo() {
   const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
   // I KPI di un round si vedono solo dopo che la regia lo ha chiuso, non appena inviata la scelta.
   const ultimoRoundRivelato = roundAperto ? round - 1 : round
-  const roundRivelati = ROUNDS.filter((r) => r <= ultimoRoundRivelato)
+  const roundPrecedenti = ROUNDS.filter((r) => r < ultimoRoundRivelato)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -252,19 +252,40 @@ function Tavolo() {
 
         <div className="card">
           <h3>I tuoi KPI per round</h3>
-          <div className="istogrammi-fila">
-            {roundRivelati.map((r) => (
-              <IstogrammaRound
-                key={r}
-                etichetta={`R${r}`}
-                totali={calcolaKpiTavolo(
-                  scelteTavolo.filter((s) => s.round <= r),
-                  opzioniMap,
-                  kpiBaseline
-                )}
-              />
-            ))}
-          </div>
+          {ultimoRoundRivelato < 1 ? (
+            <p className="status-muted" style={{ margin: 0 }}>
+              I box con i KPI di ogni round compaiono man mano che la regia li chiude.
+            </p>
+          ) : (
+            <>
+              {roundPrecedenti.length > 0 && (
+                <div className="istogrammi-fila">
+                  {roundPrecedenti.map((r) => (
+                    <IstogrammaRound
+                      key={r}
+                      etichetta={`R${r}`}
+                      totali={calcolaKpiTavolo(
+                        scelteTavolo.filter((s) => s.round <= r),
+                        opzioniMap,
+                        kpiBaseline
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="istogramma-attuale">
+                <IstogrammaRound
+                  etichetta={`Situazione attuale · R${ultimoRoundRivelato}`}
+                  totali={calcolaKpiTavolo(
+                    scelteTavolo.filter((s) => s.round <= ultimoRoundRivelato),
+                    opzioniMap,
+                    kpiBaseline
+                  )}
+                  grande
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

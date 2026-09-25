@@ -599,6 +599,8 @@ label {
   flex: 1;
   min-height: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---- KPI badges ---- */
@@ -765,65 +767,67 @@ label {
   flex-wrap: wrap;
 }
 
-.istogrammi-fila:empty::after {
-  content: 'I box con i KPI di ogni round compaiono man mano che la regia li chiude.';
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-/* Board Dashboard: cronologia piccola + situazione attuale grande, dimensioni
-   scalate in vh per restare sempre dentro alla card senza scroll (schermo TV). */
-
-.istogrammi-board {
+.istogramma-attuale {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: clamp(0.5rem, 1.2vw, 1rem);
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-}
-
-.istogrammi-board__storico {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: clamp(0.3rem, 0.6vw, 0.5rem);
-  align-content: center;
-  justify-content: flex-end;
-}
-
-.istogrammi-board .istogramma-round__barre {
-  height: clamp(34px, 9vh, 60px);
-  gap: clamp(0.2rem, 0.5vw, 0.4rem);
-}
-
-.istogrammi-board .istogramma-round__barra {
-  width: clamp(8px, 1.1vw, 13px);
-}
-
-.istogrammi-board .istogramma-round--grande .istogramma-round__barre {
-  height: clamp(55px, 15vh, 100px);
-}
-
-.istogrammi-board .istogramma-round--grande .istogramma-round__barra {
-  width: clamp(14px, 1.8vw, 22px);
-}
-
-.istogrammi-board .istogramma-round__label,
-.istogrammi-board .istogramma-round__kpi-label {
-  font-size: clamp(0.55rem, 1vh, 0.75rem);
-}
-
-.istogrammi-board .istogramma-round {
-  padding: clamp(0.35rem, 1vh, 0.6rem) clamp(0.4rem, 0.8vw, 0.6rem);
+  margin-top: 0.75rem;
 }
 
 @media (max-width: 420px) {
   .istogrammi-fila {
     gap: 0.5rem;
   }
+}
+
+/* Board Dashboard: il box KPI di un round sta sotto il suo round-chip (solo se il
+   round è già chiuso), la situazione attuale è grande e centrata sotto la griglia.
+   Dimensioni scalate in vh per restare sempre dentro alla card senza scroll (TV). */
+
+.dash-round-colonna {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.25rem, 0.6vh, 0.4rem);
+}
+
+.dash-round-colonna .istogramma-round {
+  width: 100%;
+  padding: clamp(0.25rem, 0.6vh, 0.4rem) clamp(0.2rem, 0.4vw, 0.35rem);
+  gap: clamp(0.15rem, 0.4vh, 0.3rem);
+}
+
+.dash-round-colonna .istogramma-round__barre {
+  height: clamp(26px, 7vh, 46px);
+  gap: clamp(0.15rem, 0.35vw, 0.3rem);
+}
+
+.dash-round-colonna .istogramma-round__barra {
+  width: clamp(6px, 0.9vw, 10px);
+}
+
+.dash-round-colonna .istogramma-round__kpi-label {
+  font-size: clamp(0.5rem, 0.9vh, 0.65rem);
+}
+
+.dash-card__grafico .istogramma-round--grande {
+  padding: clamp(0.6rem, 1.8vh, 1rem) clamp(0.8rem, 1.6vw, 1.2rem);
+}
+
+.dash-card__grafico .istogramma-round--grande .istogramma-round__barre {
+  height: clamp(55px, 16vh, 100px);
+  gap: clamp(0.4rem, 1vw, 0.7rem);
+}
+
+.dash-card__grafico .istogramma-round--grande .istogramma-round__barra {
+  width: clamp(14px, 1.8vw, 22px);
+}
+
+.dash-card__grafico .istogramma-round--grande .istogramma-round__label {
+  font-size: clamp(0.65rem, 1.3vh, 0.9rem);
+}
+
+.dash-card__grafico .istogramma-round--grande .istogramma-round__kpi-label {
+  font-size: clamp(0.6rem, 1.1vh, 0.8rem);
 }
 
 /* ---- Status text ---- */
