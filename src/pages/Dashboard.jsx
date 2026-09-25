@@ -94,6 +94,8 @@ function Dashboard() {
   const partitaConclusa = round === 4 && roundConcluso
   const mostraIntro = round === 1 && !aperto && !roundConcluso
   const prossimoRound = roundConcluso ? round + 1 : round
+  // Stesso criterio usato in Tavolo: i KPI di un round si vedono solo a round chiuso.
+  const ultimoRoundRivelato = aperto ? round - 1 : round
 
   const colonne = tavoli.length <= 4 ? 2 : 3
   const righe = Math.ceil(tavoli.length / colonne) || 1
@@ -131,6 +133,7 @@ function Dashboard() {
                 scelteTavolo={scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))}
                 opzioniMap={opzioniMap}
                 kpiBaseline={sessione.kpi_baseline ?? KPI_BASE_DEFAULT}
+                ultimoRoundRivelato={ultimoRoundRivelato}
               />
             ))}
           </div>

@@ -12,12 +12,12 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { LETTERE, idOpzione, idScelta } from '../lib/costanti'
-import { KPI_BASE_DEFAULT, KPI_CHIAVI } from '../lib/kpi'
+import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
+import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
-import GraficoKpiSingolo from '../components/GraficoKpiSingolo'
+import IstogrammaRound from '../components/IstogrammaRound'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -168,7 +168,7 @@ function Tavolo() {
   const kpiBaseline = sessione.kpi_baseline ?? KPI_BASE_DEFAULT
   // I KPI di un round si vedono solo dopo che la regia lo ha chiuso, non appena inviata la scelta.
   const ultimoRoundRivelato = roundAperto ? round - 1 : round
-  const scelteRivelate = scelteTavolo.filter((s) => s.round <= ultimoRoundRivelato)
+  const roundRivelati = ROUNDS.filter((r) => r <= ultimoRoundRivelato)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -251,15 +251,17 @@ function Tavolo() {
         )}
 
         <div className="card">
-          <h3>I tuoi KPI</h3>
-          <div className="grafico-kpi-griglia">
-            {KPI_CHIAVI.map((kpi) => (
-              <GraficoKpiSingolo
-                key={kpi}
-                chiave={kpi}
-                scelteTavolo={scelteRivelate}
-                opzioniMap={opzioniMap}
-                kpiBaseline={kpiBaseline}
+          <h3>I tuoi KPI per round</h3>
+          <div className="istogrammi-fila">
+            {roundRivelati.map((r) => (
+              <IstogrammaRound
+                key={r}
+                etichetta={`R${r}`}
+                totali={calcolaKpiTavolo(
+                  scelteTavolo.filter((s) => s.round <= r),
+                  opzioniMap,
+                  kpiBaseline
+                )}
               />
             ))}
           </div>
