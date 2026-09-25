@@ -343,3 +343,304 @@ distribuzione dichiarata nel documento ufficiale, quindi l'interpretazione è co
 4. Chiudi il round da `/regia`: la dashboard deve mostrare "In attesa che la regia apra il round..."
    finché non ne apri uno nuovo (a meno che "Mostra risultati" non sia già attivo)
 
+
+## Survey evento — Passo 1: contenuto e calcolo punteggi
+
+Questionario pubblico "Lean nell'era dell'incertezza" per l'evento del 29 settembre 2026.
+Specifica completa in [`SURVEY_SPEC.md`](SURVEY_SPEC.md).
+
+- `src/survey/content.js`: 7 dimensioni × 3 domande × 5 ancore trascritte alla lettera dalla
+  specifica, più anagrafica (settori, dimensioni aziendali), testi dei consensi, costante
+  `CAMPAGNA` (`2026-09-29-belforte`) e `VERSIONE_TESTO_CONSENSO`
+- `src/survey/frasi.js`: 35 frasi di lettura (7 dimensioni × 5 fasce), per ora **segnaposto**
+  `[[FRASE dX fascia N]]` da sostituire con i testi definitivi mantenendo la struttura
+- `src/survey/scoring.js`: modulo puro (niente React/Firebase) con punteggio per dimensione
+  `(media-1)/4*100`, totale (media delle 7), livello/fascia sul valore arrotondato, punti di forza e
+  aree di attenzione (a parità vince l'ordine d1...d7; le attenzioni si scelgono tra le dimensioni
+  non già "forza", così le due liste non si sovrappongono mai, nemmeno con molti pari merito)
+- Test unitari con il test runner integrato di Node (nessuna nuova dipendenza): `npm test`
+  - `scoring.test.js`: tutte 1 / tutte 5, confini 20/21, 40/41, 60/61, 80/81 (sia su valori
+    diretti sia da risposte reali), pari merito
+  - `content.test.js`: confronta `content.js` con il testo di `SURVEY_SPEC.md`, così un refuso
+    nella trascrizione fa fallire il test
+
+### Come testare
+
+1. `npm test`: devono passare tutti i test
+
+## Survey evento — Passo 2: schermate di compilazione
+
+- Nuova route pubblica **`/survey`** (non linkata da nessuna vista del game). In `App.jsx` il game è
+  stato spostato in un componente `Game` identico a prima (stesse route, stessa inizializzazione
+  dei dati): `/survey` è l'unica route che **non** passa da `assicuraDatiIniziali()` e viene
+  caricata a parte (lazy), così un partecipante non tocca le collezioni del game
+- `src/survey/firebaseSurvey.js`: istanza Firebase dedicata `initializeApp(config, 'survey')`.
+  Se è valorizzata `VITE_SURVEY_FIREBASE_PROJECT_ID` usa **tutte** le `VITE_SURVEY_FIREBASE_*`,
+  altrimenti ricade in blocco sulle `VITE_FIREBASE_*` del game (vedi `.env.example`)
+- Flusso: benvenuto e consenso (informativa segnaposto, 3 caselle non preselezionate, le prime 2
+  obbligatorie) → anagrafica (tutti obbligatori, email validata) → 7 schermate da 3 domande con
+  barra "Dimensione X di 7", 5 opzioni a tutta larghezza con badge 1-5; "Avanti" attivo solo con
+  3 risposte, "Indietro" sempre disponibile
+- Tutto lo stato è salvato in `localStorage` (chiave `survey:2026-09-29-belforte`) a ogni modifica:
+  un ricaricamento riprende dalla stessa schermata con le stesse risposte
+- Invio: **un solo documento** in `survey_risposte`, scritto alla fine con `creato_at` = timestamp
+  del server. L'id è generato sul client e riusato nei tentativi, così "Riprova" non crea
+  duplicati. Senza rete l'SDK non dà errore ma resta in attesa: dopo 20 secondi compare il
+  messaggio di errore con "Riprova" (le risposte restano sul dispositivo)
+- Stili in `src/index.css` (sezione "Survey evento", classi `.survey-*`), riusando card, bottoni e
+  `.option-btn` del game. Nota: l'app ha un solo tema (scuro), il survey usa quello
+
+### Come testare
+
+1. Apri `/survey` da smartphone: "Inizia" resta disattivo finché non spunti i due consensi
+   obbligatori
+2. Anagrafica: premi "Avanti" a campi vuoti → errori sotto ogni campo; email senza `@` → "Email
+   non valida"
+3. Dimensioni: "Avanti" disattivo finché non rispondi alle 3 domande; "Indietro" mantiene le
+   risposte date
+4. A metà (es. dimensione 3) **ricarica la pagina**: devi ritrovarti sulla stessa dimensione con
+   le risposte selezionate
+5. Le route del game (`/`, `/config`, `/tavolo/1`, `/regia`, `/dashboard`) devono comportarsi
+   esattamente come prima
+
+## Survey evento — Passo 3: schermata del risultato
+
+- Dopo l'invio riuscito lo stato viene segnato come completato in `localStorage`: riaprendo
+  `/survey` sullo stesso dispositivo si rivede direttamente il risultato, senza ricompilare
+- Schermata, dall'alto: saluto con nome e azienda; punteggio complessivo in grande con il nome
+  del livello; radar a 7 assi (0-100%, una sola serie) in **SVG scritto a mano**
+  (`src/survey/Radar.jsx`, nessuna libreria nuova; gli anelli della griglia sono i confini delle
+  fasce 20/40/60/80/100); blocchi "Punti di forza" e "Aree di attenzione" con nome della
+  dimensione e frase da `frasi.js[dimensione][fascia]`; messaggio finale esatto della specifica
+  (in `content.js`, verificato da un test)
+- Nessun numero per singola dimensione, nessuna risposta, nessun benchmark né data di arrivo
+
+### Come testare
+
+1. Completa il questionario: dopo l'invio compare il risultato con il tuo nome e l'azienda
+2. Con risposte tutte "1" il totale è 0% Iniziale, tutte "5" 100% Eccellente, tutte "3" 50%
+   Strutturato
+3. Controlla che il radar sia leggibile da smartphone (etichette dentro la card) e da desktop
+4. Chiudi e riapri `/survey` sullo stesso telefono: rivedi il risultato, non il questionario
+
+## Survey evento — Passo 4: regole di sicurezza Firestore
+
+Stato di partenza: nel `firestore.rules` del repo **non c'era** una regola generica
+`match /{document=**}`, solo le 4 regole esplicite del game. Le regole però si pubblicano a mano
+dalla console Firebase (il repo non ha `firebase.json`), quindi **quelle attive nel progetto
+possono essere diverse dal file**: vanno controllate e sostituite (vedi sotto).
+
+- Game (`tavoli`, `opzioni`, `sessione`, `scelte`): `allow read, write: if true`, **invariato**
+- `survey_risposte`: `allow read, update, delete: if false`; `allow create` solo se il documento
+  ha esattamente i campi `campagna, creato_at, consenso, anagrafica, risposte, punteggi` e:
+  - `creato_at` è il timestamp del server (`request.time`)
+  - `consenso` ha esattamente `privacy` e `benchmark_aggregato` a `true`, `contatto_bpr`
+    booleano, `versione_testo` stringa (max 50)
+  - `anagrafica` ha esattamente i 6 campi, stringhe non vuote (max 200), email in formato valido,
+    `settore` e `dimensione` tra i valori ammessi
+  - `risposte` ha esattamente le 21 chiavi `d1q1`...`d7q3`, interi da 1 a 5
+  - `punteggi` ha esattamente `d1`...`d7` e `totale`, numeri tra 0 e 100
+- Commento in testa al file: mai aggiungere una regola generica (le regole si sommano in OR)
+- Il documento scritto dal browser è costruito da `src/survey/documento.js`, lo stesso modulo usato
+  dal test delle regole: se le due cose divergono il test fallisce
+- `npm test` controlla anche che gli elenchi di settori e dimensioni nelle regole coincidano con
+  `content.js`
+
+### Test automatico delle regole (emulatore)
+
+`npm run test:rules` avvia l'emulatore Firestore (serve **Java**; `firebase-tools` viene scaricato
+con `npx`) ed esegue `tests/firestore.rules.test.mjs`: 36 casi, tra cui il game ancora aperto,
+creazione valida consentita, 25 varianti non valide rifiutate, lettura/lista/modifica/cancellazione
+di `survey_risposte` vietate. **Passano tutti sull'emulatore**; l'emulatore non è il progetto
+reale, per quello vale la checklist qui sotto.
+
+### Come pubblicare e testare (da fare a mano)
+
+1. Console Firebase → Firestore Database → **Regole**: copia da parte le regole attuali (backup)
+   e controlla se contengono una regola generica `match /{document=**}`
+2. Sostituisci **tutto** il contenuto con quello di `firestore.rules` e premi "Pubblica"
+   (in alternativa: `npx firebase-tools deploy --only firestore:rules --project <id>`)
+3. Nella stessa pagina, scheda "Rules Playground": simula una `get` su
+   `/survey_risposte/qualsiasi` → deve essere **negata**; una `get` su `/tavoli/1` → consentita
+4. Verifica che il game funzioni come prima: `/` (conteggi delle 4 collezioni), `/config`
+   (salva), `/tavolo/1` (invia una scelta), `/regia` (apri/chiudi round), `/dashboard`
+5. Se il survey usa un progetto Firebase separato (variabili `VITE_SURVEY_FIREBASE_*`), pubblica
+   lo stesso file anche lì
+
+## Survey evento — Passo 5: script di export
+
+- `scripts/export-survey.mjs` (Node, `firebase-admin` in devDependencies), da lanciare a mano:
+
+  ```bash
+  GOOGLE_APPLICATION_CREDENTIALS=/percorso/fuori-dal-repo/service-account.json \
+    npm run export:survey -- 2026-09-29-belforte
+  ```
+
+  Il service account si scarica da Console Firebase → Impostazioni progetto → Account di servizio
+  → "Genera nuova chiave privata" (del progetto del survey, se separato). Tienilo **fuori dal
+  repo**; per sicurezza `.gitignore` esclude comunque `*service-account*.json`,
+  `*-firebase-adminsdk-*.json`, `credenziali/` e `survey_export.json`
+- Legge tutti i documenti di `survey_risposte` con la `campagna` indicata e scrive
+  `survey_export.json` (id, tutti i campi, timestamp in ISO) nella cartella corrente; stampa il
+  numero di risposte e il conteggio per settore; segnala eventuali documenti i cui punteggi
+  salvati non coincidono con quelli ricalcolati dalle risposte
+- Benchmark e PDF non fanno parte dell'app: si producono a parte partendo da questo file
+- Verificato sull'emulatore Firestore (2 risposte della campagna esportate, 1 di un'altra campagna
+  esclusa); **non** verificato sul progetto reale
+
+## Survey evento — Riepilogo e checklist di test manuale
+
+Changelog del survey: passi 1-5 qui sopra. Verificato nel mio ambiente: `npm test` (22 test su
+punteggi e contenuto), `npm run test:rules` (36 test delle regole sull'emulatore), build, lint,
+flusso completo in Chromium headless con viewport da telefono (compilazione, ricarica a metà,
+"Indietro", errore di invio con "Riprova" senza Firestore raggiungibile) e rendering del
+risultato a 360/390/1280 px. **Non verificato**: sito pubblicato, Firestore reale, dispositivi veri.
+
+Da fare prima dell'evento:
+- [x] Frasi di lettura definitive in `src/survey/frasi.js` (da `FRASI_LETTURA.md`)
+- [ ] Sostituire il testo `INFORMATIVA_PRIVACY` in `src/survey/content.js` (aggiornando
+      `VERSIONE_TESTO_CONSENSO`)
+- [ ] Verificare la regione del database Firestore; se non è in UE creare un progetto separato
+      e impostare le `VITE_SURVEY_FIREBASE_*` nelle variabili di build di Cloudflare
+- [ ] Pubblicare `firestore.rules` (passo 4)
+- [ ] Generare il QR verso `https://<dominio>/survey`
+
+Checklist su dispositivi reali (sito pubblicato):
+1. **Compilazione completa da smartphone** (iOS e Android): QR → `/survey` → consensi →
+   anagrafica → 7 dimensioni → risultato. Controlla leggibilità delle ancore e del radar
+2. **Ricarica a metà**: alla dimensione 4 ricarica o chiudi e riapri il browser → riparti da lì
+   con tutte le risposte
+3. **Perdita di rete e "Riprova"**: arrivato all'ultima dimensione attiva la modalità aereo e
+   premi "Invia e vedi il risultato" → dopo circa 20 s compare "Invio non riuscito" con
+   "Riprova"; togli la modalità aereo, premi "Riprova" → compare il risultato. In Console
+   Firebase → Firestore deve esserci **un solo** documento per quella compilazione
+4. **Riapertura dopo il completamento**: riapri `/survey` sullo stesso telefono → risultato
+   subito, niente questionario. Su un altro dispositivo si parte da capo
+5. **Lettura bloccata**: da un PC apri il sito, console del browser (F12) e incolla:
+
+   ```js
+   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js')
+   const fs = await import('https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js')
+   const app = initializeApp({ apiKey: '<VITE_FIREBASE_API_KEY>', projectId: '<PROJECT_ID>' }, 'prova')
+   const db = fs.getFirestore(app)
+   await fs.getDocs(fs.collection(db, 'survey_risposte'))   // deve dare "Missing or insufficient permissions"
+   await fs.getDocs(fs.collection(db, 'tavoli'))            // deve funzionare (game aperto)
+   ```
+
+   (usa le chiavi del progetto del survey, se separato)
+6. **Il game funziona come prima**: `/`, `/config`, `/tavolo/1`, `/regia`, `/dashboard` — apri e
+   chiudi un round, invia una scelta, controlla che la Dashboard si aggiorni
+7. **Nessun link al survey** nelle viste del game
+8. **Export**: dopo qualche compilazione di prova lancia lo script (passo 5) e controlla il
+   riepilogo; poi cancella dalla Console i documenti di prova prima dell'evento
+
+## Survey evento — Frasi di lettura definitive
+
+- `FRASI_LETTURA.md` (testi approvati) aggiunto nella radice accanto a `SURVEY_SPEC.md`, che è
+  aggiornata alla nuova versione
+- `src/survey/frasi.js` generato da quel file senza toccare i testi: export
+  `TITOLO_BLOCCO_AVANTI`, `TITOLO_BLOCCO_MARGINE`, `LIVELLI`, `FRASI`
+- I due blocchi del risultato ora si chiamano **"Dove sei più avanti"** e **"Dove c'è margine di
+  miglioramento"** (presi da `frasi.js`). Come tutti i titoli di sezione dell'app sono mostrati in
+  maiuscolo dal CSS; il testo resta quello del file
+- Nuovi test: ogni frase, i titoli e i nomi dei livelli di `frasi.js` devono coincidere
+  carattere per carattere con `FRASI_LETTURA.md` (anche un apostrofo tipografico al posto di quello
+  dritto fa fallire il test); i nomi dei livelli devono coincidere con quelli di `scoring.js`
+
+### Come testare
+
+1. `npm test`: 22 test verdi
+2. Completa il questionario: sotto "Dove sei più avanti" e "Dove c'è margine di miglioramento"
+   compaiono le frasi vere della fascia di ciascuna dimensione (nessun `[[FRASE ...]]`)
+
+## Survey collegato al gioco: link e QR di fine partita
+
+Su richiesta, il survey ora è raggiungibile anche dalle viste di gestione (la specifica iniziale
+diceva di non linkarlo: decisione cambiata).
+
+- Nuovo componente `NavGioco`: la stessa barra di link su **Home, Config, Regia e Dashboard TV**,
+  ognuna con i link a tutte le altre e a **Survey**. Sulla Dashboard i link sono piccoli e
+  discreti nell'intestazione, per non disturbare la proiezione
+- Tavolo e Survey restano senza barra: sono le pagine dei partecipanti, che non devono finire in
+  Regia o Config
+- **Dashboard, fine partita**: quando il Round 4 è chiuso e "Mostra risultati" è spento, la
+  schermata "Fine del gioco" mostra un grande **QR code verso `/survey`** (bianco su nero,
+  generato con la libreria `qrcode` già usata in Config) con "Inquadra il QR code e compila il
+  questionario" e l'indirizzo in chiaro. Sequenza tipica: chiudi il Round 4 → "Fine del gioco" con
+  QR → attivi "Mostra risultati" per il debrief (il QR sparisce) → disattivi "Mostra risultati" →
+  torna "Fine del gioco" con il QR. Il vecchio sottotitolo "Attiva Mostra risultati da Regia..."
+  è stato sostituito dal QR
+- L'URL del QR usa il dominio da cui è aperta la Dashboard (come i QR dei tavoli in Config)
+
+### Come testare
+
+1. Home, Config, Regia e Dashboard: in alto a destra ci sono i link a tutte le altre pagine e a
+   Survey; ciascun link apre la pagina giusta
+2. Gioca fino a chiudere il Round 4 da Regia: la Dashboard mostra "Fine del gioco" con il QR
+3. Inquadra il QR con un telefono: si apre `/survey`
+4. Attiva "Mostra risultati": compaiono le schede dei tavoli (niente QR); disattivalo: torna il QR
+5. Tavolo e Survey non mostrano link alle pagine di gestione
+
+## Risultati survey (`/survey-risultati`, pagina riservata)
+
+Pagina per vedere durante e dopo l'evento chi ha risposto, i risultati di ciascuno, il benchmark
+e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia e Dashboard.
+
+- **Accesso con link riservato**: `https://<dominio>/survey-risultati#chiave=<CHIAVE>`. La chiave
+  è la password di un utente Firebase dedicato (`risultati-survey@example.com`, un identificativo,
+  non una casella reale) e **non sta nel codice**. Aprendo il link la pagina accede e toglie
+  subito la chiave dalla barra degli indirizzi; su quel browser l'accesso resta attivo finché non
+  premi "Esci". Senza link si può anche inserire la chiave a mano
+- **Perché non basta un link segreto**: la pagina legge da Firestore dal browser; senza un utente
+  autenticato le regole dovrebbero aprire la lettura a tutti, e chiunque potrebbe leggere nomi ed
+  email senza nemmeno conoscere il link. Così invece Firestore dà le risposte solo a quell'utente
+- **Cosa mostra** (aggiornato in tempo reale):
+  - numero di risposte, maturità media, quanti vogliono essere contattati
+  - benchmark: media di tutte le aziende sulle 7 dimensioni (radar + tabella), confrontabile
+    con la media di un settore (con avviso se il settore ha meno di 3 risposte)
+  - conteggi e media per settore e per dimensione aziendale
+  - elenco partecipanti (ricerca per nome, azienda, email, settore, ruolo); cliccando una riga si
+    apre il dettaglio: dati, punteggio e fascia per dimensione, radar del partecipante contro la
+    media del suo settore (o di tutte, se è l'unico del settore)
+  - download **CSV** (separatore `;`, si apre direttamente con Excel in italiano) e **JSON**
+- I punteggi sono sempre **ricalcolati dalle risposte** (`src/survey/risultati.js`, con test)
+- I colori delle due serie dei radar di confronto sono verificati per il daltonismo; la seconda
+  serie ha anche marcatori quadrati e area senza riempimento, più legenda
+- Il codice di accesso (Firebase Authentication) viene caricato solo da questa pagina: il
+  questionario dei partecipanti resta leggero
+
+### Da fare una volta nella console Firebase (progetto del survey)
+
+1. **Authentication** → "Inizia" (se non è già attivo) → scheda **Metodo di accesso** →
+   **Email/password** → Attiva → Salva (il "link via email" lascialo spento)
+2. Scheda **Utenti** → **Aggiungi utente**: email `risultati-survey@example.com`, password =
+   una chiave lunga scelta da te (almeno 20 caratteri, solo lettere e numeri, così il link resta
+   pulito). Se la console risponde che l'email esiste già, fermati e avvisa: qualcuno l'ha creata
+   prima di te
+3. Consigliato: **Authentication → Impostazioni → Azioni utente** → togli la spunta a
+   "Abilita creazione (registrazione)", così nessuno può creare altri account dal browser
+4. **Firestore Database → Regole**: incolla la versione aggiornata di `firestore.rules` e
+   pubblica (sostituisce quella del passo 4 del survey)
+5. Il tuo link riservato è `https://decision-game-board.galloni-luca.workers.dev/survey-risultati#chiave=<la password>`:
+   salvalo nei preferiti o in un password manager, **non** in chat o documenti condivisi
+
+### Test
+
+- Automatici: `npm test` (29 test, compresi aggregazioni ed export CSV/JSON) e
+  `npm run test:rules` (41 test: l'utente riservato può leggere ma non modificare/cancellare; un
+  altro utente autenticato, lo stesso indirizzo con accesso Google o un visitatore anonimo non
+  possono leggere; il game resta aperto)
+- Verificato in locale sugli emulatori Firestore + Authentication con Chromium headless: un
+  partecipante compila e invia dal browser, la chiave sbagliata è rifiutata, il link con la chiave
+  entra e la chiave sparisce dall'indirizzo, benchmark e dettaglio si vedono, CSV e JSON si
+  scaricano con tutte le risposte, l'accesso resta dopo il ricaricamento, "Esci" funziona, link
+  da Home e Regia, nessuno scorrimento orizzontale su telefono. **Non verificato sul progetto reale**
+
+Checklist manuale (dopo i passi in console):
+1. Apri il link riservato da PC: vedi le risposte (anche quelle di prova)
+2. Apri `/survey-risultati` da una finestra in incognito senza chiave: compare solo "Accesso
+   riservato"; una chiave sbagliata dà "Chiave non valida."
+3. Compila il survey da un telefono: la pagina risultati si aggiorna da sola (+1)
+4. Scarica il CSV e aprilo con Excel: colonne separate, accenti corretti
+5. Ripeti il punto 5 della checklist del survey (lettura dalla console del browser senza accesso:
+   deve fallire)

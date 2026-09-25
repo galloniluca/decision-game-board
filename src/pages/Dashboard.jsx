@@ -7,6 +7,8 @@ import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import { statoInvioTavolo } from '../lib/statoTavolo'
 import TavoloScheda from '../components/TavoloScheda'
 import ScenaEvento from '../components/ScenaEvento'
+import NavGioco from '../components/NavGioco'
+import QrSurvey from '../components/QrSurvey'
 
 function Dashboard() {
   const [caricamento, setCaricamento] = useState(true)
@@ -110,6 +112,7 @@ function Dashboard() {
         <span className="dashboard-tv__status">
           {partitaConclusa ? 'Partita conclusa' : `Round ${round}: ${ROUND_NOMI[round]} — ${aperto ? 'Aperto' : 'Chiuso'}`}
         </span>
+        <NavGioco corrente="/dashboard" />
       </div>
 
       {errore && <p className="status-error">❌ {errore}</p>}
@@ -167,10 +170,9 @@ function Dashboard() {
         </div>
       ) : partitaConclusa ? (
         <div className="dashboard-live">
-          <ScenaEvento
-            titolo="Fine del gioco"
-            sottotitolo='Attiva "Mostra risultati" da Regia per il debrief finale.'
-          />
+          <ScenaEvento titolo="Fine del gioco">
+            <QrSurvey />
+          </ScenaEvento>
         </div>
       ) : (
         <div className="dashboard-live">

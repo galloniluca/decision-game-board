@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import Topbar from '../components/Topbar'
+import NavGioco from '../components/NavGioco'
 
 const COLLEZIONI = ['tavoli', 'opzioni', 'sessione', 'scelte']
 
@@ -39,11 +40,7 @@ function Home() {
     <div className="page">
       <Topbar
         right={
-          <span className="nav-links">
-            <Link to="/config">Config</Link>
-            <Link to="/regia">Regia</Link>
-            <Link to="/dashboard">Dashboard TV</Link>
-          </span>
+          <NavGioco corrente="/" />
         }
       />
       <div className="page-inner">

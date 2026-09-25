@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
 import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
@@ -10,6 +9,7 @@ import { statoInvioTavolo } from '../lib/statoTavolo'
 import Timer from '../components/Timer'
 import BoardKpi from '../components/BoardKpi'
 import Topbar from '../components/Topbar'
+import NavGioco from '../components/NavGioco'
 
 function Regia() {
   const [caricamento, setCaricamento] = useState(true)
@@ -161,11 +161,7 @@ function Regia() {
     <div className="page">
       <Topbar
         right={
-          <span className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/config">Config</Link>
-            <Link to="/dashboard">Dashboard TV</Link>
-          </span>
+          <NavGioco corrente="/regia" />
         }
       />
       <div className="page-inner page-inner--wide">

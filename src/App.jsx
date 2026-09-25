@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Config from './pages/Config'
@@ -7,7 +7,12 @@ import Regia from './pages/Regia'
 import Dashboard from './pages/Dashboard'
 import { assicuraDatiIniziali } from './lib/seed'
 
-function App() {
+// Il survey è una pagina pubblica indipendente dal game: caricata a parte e senza
+// passare dall'inizializzazione dei dati del game.
+const Survey = lazy(() => import('./survey/Survey'))
+const SurveyRisultati = lazy(() => import('./survey/SurveyRisultati'))
+
+function Game() {
   const [seedErrore, setSeedErrore] = useState(null)
   const [seedPronto, setSeedPronto] = useState(false)
 
@@ -38,6 +43,30 @@ function App() {
       <Route path="/tavolo/:id" element={<Tavolo />} />
       <Route path="/regia" element={<Regia />} />
       <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route
+        path="/survey"
+        element={
+          <Suspense fallback={<div className="page" />}>
+            <Survey />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/survey-risultati"
+        element={
+          <Suspense fallback={<div className="page" />}>
+            <SurveyRisultati />
+          </Suspense>
+        }
+      />
+      <Route path="*" element={<Game />} />
     </Routes>
   )
 }

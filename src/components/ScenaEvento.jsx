@@ -1,4 +1,4 @@
-function ScenaEvento({ titolo, sottotitolo }) {
+function ScenaEvento({ titolo, sottotitolo, children }) {
   return (
     <div className="scena-evento">
       <svg
@@ -28,6 +28,7 @@ function ScenaEvento({ titolo, sottotitolo }) {
       <div className="scena-evento__testo">
         <h2 className="scena-evento__titolo">{titolo}</h2>
         {sottotitolo && <p className="scena-evento__sottotitolo">{sottotitolo}</p>}
+        {children}
       </div>
 
       <p className="scena-evento__tagline">

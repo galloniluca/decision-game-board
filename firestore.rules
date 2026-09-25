@@ -1,10 +1,13 @@
 rules_version = '2';
 
-// Nessuna autenticazione: la sicurezza è minima, basata su URL non
-// prevedibili (coerente con l'uso in un evento live a bassa criticità).
-// Accesso aperto in lettura/scrittura solo alle 4 collezioni del gioco.
+// Nessuna autenticazione. Le regole Firestore si sommano in OR: NON aggiungere mai una regola
+// generica tipo `match /{document=**} { allow read, write: if true; }`, perché aprirebbe anche
+// survey_risposte (dati personali). Ogni collezione ha la sua regola esplicita.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---- Game: accesso aperto alle 4 collezioni (sicurezza minima basata su URL non
+    // prevedibili, coerente con l'uso in un evento live a bassa criticità). Invariato.
     match /tavoli/{id} {
       allow read, write: if true;
     }
@@ -16,6 +19,98 @@ service cloud.firestore {
     }
     match /scelte/{id} {
       allow read, write: if true;
+    }
+
+    // ---- Survey: dal browser chiunque può solo CREARE un documento valido.
+    // Leggere è permesso solo all'utente riservato della pagina /survey-risultati
+    // (Firebase Authentication, Email/Password, vedi src/survey/accesso.js).
+    // Modifica e cancellazione sono vietate a tutti. Lo script scripts/export-survey.mjs
+    // usa l'Admin SDK, che non passa da queste regole.
+    match /survey_risposte/{id} {
+      allow read: if utenteRisultati();
+      allow update, delete: if false;
+      allow create: if rispostaSurveyValida(request.resource.data);
+    }
+
+    function utenteRisultati() {
+      return request.auth != null
+        && request.auth.token.email == 'risultati-survey@example.com'
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
+    function testo(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    function chiaviEsatte(m, chiavi) {
+      return m is map && m.keys().hasAll(chiavi) && m.keys().hasOnly(chiavi);
+    }
+
+    function voto(v) {
+      return v is int && v >= 1 && v <= 5;
+    }
+
+    function percentuale(v) {
+      return (v is int || v is float) && v >= 0 && v <= 100;
+    }
+
+    function consensoValido(c) {
+      return chiaviEsatte(c, ['privacy', 'benchmark_aggregato', 'contatto_bpr', 'versione_testo'])
+        && c.privacy == true
+        && c.benchmark_aggregato == true
+        && c.contatto_bpr is bool
+        && testo(c.versione_testo, 50);
+    }
+
+    function anagraficaValida(a) {
+      return chiaviEsatte(a, ['nome', 'azienda', 'email', 'ruolo', 'settore', 'dimensione'])
+        && testo(a.nome, 200)
+        && testo(a.azienda, 200)
+        && testo(a.ruolo, 200)
+        && testo(a.email, 200)
+        && a.email.matches('^[^ @]+@[^ @]+[.][^ @]+$')
+        && a.settore in [
+          'Meccanica e macchinari',
+          'Arredo e legno',
+          'Elettrodomestici, elettronica ed elettromeccanica',
+          'Automotive e componentistica',
+          'Chimica, plastica e materiali',
+          'Alimentare e beverage',
+          'Servizi e consulenza',
+          'Altro'
+        ]
+        && a.dimensione in ['Fino a 50 dipendenti', '51-250 dipendenti', 'Oltre 250 dipendenti'];
+    }
+
+    function risposteValide(r) {
+      return chiaviEsatte(r, [
+          'd1q1', 'd1q2', 'd1q3', 'd2q1', 'd2q2', 'd2q3', 'd3q1', 'd3q2', 'd3q3',
+          'd4q1', 'd4q2', 'd4q3', 'd5q1', 'd5q2', 'd5q3', 'd6q1', 'd6q2', 'd6q3',
+          'd7q1', 'd7q2', 'd7q3'
+        ])
+        && voto(r.d1q1) && voto(r.d1q2) && voto(r.d1q3)
+        && voto(r.d2q1) && voto(r.d2q2) && voto(r.d2q3)
+        && voto(r.d3q1) && voto(r.d3q2) && voto(r.d3q3)
+        && voto(r.d4q1) && voto(r.d4q2) && voto(r.d4q3)
+        && voto(r.d5q1) && voto(r.d5q2) && voto(r.d5q3)
+        && voto(r.d6q1) && voto(r.d6q2) && voto(r.d6q3)
+        && voto(r.d7q1) && voto(r.d7q2) && voto(r.d7q3);
+    }
+
+    function punteggiValidi(p) {
+      return chiaviEsatte(p, ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'totale'])
+        && percentuale(p.d1) && percentuale(p.d2) && percentuale(p.d3) && percentuale(p.d4)
+        && percentuale(p.d5) && percentuale(p.d6) && percentuale(p.d7) && percentuale(p.totale);
+    }
+
+    function rispostaSurveyValida(d) {
+      return chiaviEsatte(d, ['campagna', 'creato_at', 'consenso', 'anagrafica', 'risposte', 'punteggi'])
+        && testo(d.campagna, 64)
+        && d.creato_at == request.time
+        && consensoValido(d.consenso)
+        && anagraficaValida(d.anagrafica)
+        && risposteValide(d.risposte)
+        && punteggiValidi(d.punteggi);
     }
   }
 }
