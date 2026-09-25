@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   collection,
   doc,
@@ -17,6 +16,7 @@ import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { MATRICE_UFFICIALE } from '../lib/matriceUfficiale'
 import { eseguiResetPartita } from '../lib/resetPartita'
 import Topbar from '../components/Topbar'
+import NavGioco from '../components/NavGioco'
 
 function Config() {
   const [opzioni, setOpzioni] = useState({})
@@ -231,10 +231,7 @@ function Config() {
     <div className="page">
       <Topbar
         right={
-          <span className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/regia">Regia</Link>
-          </span>
+          <NavGioco corrente="/config" />
         }
       />
       <div className="page-inner page-inner--wide">

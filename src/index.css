@@ -1028,3 +1028,47 @@ label {
     margin-right: -1.1rem;
   }
 }
+
+/* ---- Navigazione comune e QR del survey in Dashboard ---- */
+
+.nav-links {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 0.35rem;
+}
+
+.dashboard-tv__header .nav-links {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.qr-survey {
+  margin-top: clamp(1rem, 3vh, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.4rem, 1vh, 0.8rem);
+}
+
+.qr-survey__img {
+  width: clamp(160px, 34vh, 380px);
+  height: auto;
+  background: #fff; /* sfondo bianco: contrasto pieno per la lettura da smartphone */
+  padding: clamp(8px, 1.2vh, 16px);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.qr-survey__testo {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.1rem, 2.8vh, 2rem);
+  font-weight: 700;
+  color: #fff;
+}
+
+.qr-survey__url {
+  margin: 0;
+  font-size: clamp(0.9rem, 2vh, 1.4rem);
+  color: var(--text-muted);
+  font-family: var(--mono);
+}

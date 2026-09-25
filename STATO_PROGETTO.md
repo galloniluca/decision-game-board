@@ -24,7 +24,8 @@ Le 5 pagine dell'app:
 | Config | `/config` | Uso tuo, pre-evento: matrice punteggi, tavoli, timer, baseline KPI, QR, reset |
 | Tavolo | `/tavolo/1` … `/tavolo/6` | Un dispositivo per squadra (smartphone/tablet) |
 | Regia | `/regia` | Il tuo pannello di controllo durante l'evento |
-| Dashboard TV | `/dashboard` | Da proiettare, visibile a tutti i tavoli |
+| Dashboard TV | `/dashboard` | Da proiettare, visibile a tutti i tavoli; a fine partita mostra il QR del survey |
+| Survey | `/survey` | Questionario pubblico per i partecipanti (QR a fine partita in Dashboard) |
 
 ## Stack tecnico
 

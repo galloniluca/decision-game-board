@@ -552,3 +552,31 @@ Checklist su dispositivi reali (sito pubblicato):
 1. `npm test`: 22 test verdi
 2. Completa il questionario: sotto "Dove sei più avanti" e "Dove c'è margine di miglioramento"
    compaiono le frasi vere della fascia di ciascuna dimensione (nessun `[[FRASE ...]]`)
+
+## Survey collegato al gioco: link e QR di fine partita
+
+Su richiesta, il survey ora è raggiungibile anche dalle viste di gestione (la specifica iniziale
+diceva di non linkarlo: decisione cambiata).
+
+- Nuovo componente `NavGioco`: la stessa barra di link su **Home, Config, Regia e Dashboard TV**,
+  ognuna con i link a tutte le altre e a **Survey**. Sulla Dashboard i link sono piccoli e
+  discreti nell'intestazione, per non disturbare la proiezione
+- Tavolo e Survey restano senza barra: sono le pagine dei partecipanti, che non devono finire in
+  Regia o Config
+- **Dashboard, fine partita**: quando il Round 4 è chiuso e "Mostra risultati" è spento, la
+  schermata "Fine del gioco" mostra un grande **QR code verso `/survey`** (bianco su nero,
+  generato con la libreria `qrcode` già usata in Config) con "Inquadra il QR code e compila il
+  questionario" e l'indirizzo in chiaro. Sequenza tipica: chiudi il Round 4 → "Fine del gioco" con
+  QR → attivi "Mostra risultati" per il debrief (il QR sparisce) → disattivi "Mostra risultati" →
+  torna "Fine del gioco" con il QR. Il vecchio sottotitolo "Attiva Mostra risultati da Regia..."
+  è stato sostituito dal QR
+- L'URL del QR usa il dominio da cui è aperta la Dashboard (come i QR dei tavoli in Config)
+
+### Come testare
+
+1. Home, Config, Regia e Dashboard: in alto a destra ci sono i link a tutte le altre pagine e a
+   Survey; ciascun link apre la pagina giusta
+2. Gioca fino a chiudere il Round 4 da Regia: la Dashboard mostra "Fine del gioco" con il QR
+3. Inquadra il QR con un telefono: si apre `/survey`
+4. Attiva "Mostra risultati": compaiono le schede dei tavoli (niente QR); disattivalo: torna il QR
+5. Tavolo e Survey non mostrano link alle pagine di gestione
