@@ -18,6 +18,7 @@ import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
 import Timer from '../components/Timer'
 import IstogrammaRound from '../components/IstogrammaRound'
+import QrSurvey from '../components/QrSurvey'
 import Topbar from '../components/Topbar'
 
 function Tavolo() {
@@ -169,6 +170,7 @@ function Tavolo() {
   // I KPI di un round si vedono solo dopo che la regia lo ha chiuso, non appena inviata la scelta.
   const ultimoRoundRivelato = roundAperto ? round - 1 : round
   const roundPrecedenti = ROUNDS.filter((r) => r < ultimoRoundRivelato)
+  const partitaConclusa = round === 4 && (sessione.round_concluso ?? false)
   const corrispondeAllInviata = selezionata !== null && selezionata === inviataPerRoundAttivo
   const testoBottone = invioStato === 'invio'
     ? 'Invio in corso...'
@@ -287,6 +289,13 @@ function Tavolo() {
             </>
           )}
         </div>
+
+        {partitaConclusa && (
+          <div className="card">
+            <h3>Questionario di fine evento</h3>
+            <QrSurvey compatta />
+          </div>
+        )}
       </div>
     </div>
   )

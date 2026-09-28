@@ -1223,6 +1223,27 @@ label {
   font-family: var(--mono);
 }
 
+/* Variante compatta: card di una pagina normale (Tavolo), non lo schermo TV della
+   Dashboard, quindi misure fisse in rem invece che in vh. */
+
+.qr-survey--compatta {
+  margin-top: 0;
+}
+
+.qr-survey--compatta .qr-survey__img {
+  width: min(220px, 100%);
+}
+
+.qr-survey--compatta .qr-survey__testo {
+  font-size: 1rem;
+  color: var(--text);
+  text-align: center;
+}
+
+.qr-survey--compatta .qr-survey__url {
+  font-size: 0.85rem;
+}
+
 /* ---- Risultati survey (/survey-risultati, pagina riservata) ---- */
 
 /* Colori delle due serie di confronto, verificati per daltonismo sullo sfondo scuro. */
