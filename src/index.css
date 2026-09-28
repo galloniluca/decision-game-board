@@ -601,29 +601,47 @@ label {
   overflow: hidden;
 }
 
-.dash-round-chip {
+.dash-round-colonna__label {
+  flex: none;
+  font-size: clamp(0.55rem, 3.5cqh, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* Le risposte (lettera scelta per round) stanno tutte insieme sotto il corpo della
+   scheda, non più ripetute nella colonna di ogni round: risparmia spazio verticale
+   a sinistra/destra, dove ora c'è posto solo per etichetta + mini-grafico. */
+
+.dash-card__risposte {
+  flex: none;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: clamp(0.15rem, 1.5cqh, 0.3rem);
-  padding: clamp(0.25rem, 2cqh, 0.45rem) 0.2rem;
-  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: clamp(0.3rem, 1.5cqw, 0.6rem);
+}
+
+.dash-card__risposta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: clamp(0.15rem, 1cqh, 0.3rem) clamp(0.35rem, 1.5cqw, 0.55rem);
+  border-radius: 6px;
   background: var(--surface-2);
 }
 
-.dash-round-chip__label {
-  font-size: clamp(0.6rem, 3cqh, 0.75rem);
+.dash-card__risposta-round {
+  font-size: clamp(0.55rem, 3cqh, 0.7rem);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--text-muted);
   font-weight: 600;
 }
 
-.dash-round-chip__valore {
-  font-size: clamp(1.2rem, 9cqh, 2rem);
+.dash-card__risposta-valore {
+  font-size: clamp(0.75rem, 4.5cqh, 1rem);
   font-weight: 800;
-  line-height: 1;
 }
 
 /* ---- KPI badges ---- */

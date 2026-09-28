@@ -1,3 +1,4 @@
+import { ROUNDS } from '../lib/costanti'
 import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import IstogrammaRound from './IstogrammaRound'
 
@@ -11,16 +12,13 @@ function TavoloScheda({ tavolo, scelteTavolo, opzioniMap, kpiBaseline = KPI_BASE
   })
 
   function blocco(r) {
-    const scelta = sceltePerRound[r]
     // Il box KPI del round compare solo se quel round è già stato chiuso: quello
-    // attuale (ultimoRoundRivelato) è mostrato a parte, grande, al centro.
+    // attuale (ultimoRoundRivelato) è mostrato a parte, grande, al centro. La lettera
+    // scelta non sta più qui (risparmia spazio): è tutta insieme sotto, con le altre.
     const rivelato = r < ultimoRoundRivelato
     return (
       <div key={r} className="dash-round-colonna">
-        <div className="dash-round-chip">
-          <span className="dash-round-chip__label">R{r}</span>
-          <span className="dash-round-chip__valore">{scelta ? scelta.opzione : '–'}</span>
-        </div>
+        <span className="dash-round-colonna__label">R{r}</span>
         {rivelato && (
           <IstogrammaRound
             totali={calcolaKpiTavolo(scelteTavolo.filter((s) => s.round <= r), opzioniMap, kpiBaseline)}
@@ -56,6 +54,15 @@ function TavoloScheda({ tavolo, scelteTavolo, opzioniMap, kpiBaseline = KPI_BASE
         </div>
 
         <div className="dash-card__laterale">{ROUNDS_DESTRA.map(blocco)}</div>
+      </div>
+
+      <div className="dash-card__risposte">
+        {ROUNDS.map((r) => (
+          <span key={r} className="dash-card__risposta">
+            <span className="dash-card__risposta-round">R{r}</span>
+            <span className="dash-card__risposta-valore">{sceltePerRound[r]?.opzione ?? '–'}</span>
+          </span>
+        ))}
       </div>
     </div>
   )
