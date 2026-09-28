@@ -100,6 +100,13 @@ test('nomi dei livelli uguali in frasi.js e scoring.js', () => {
   )
 })
 
+test('informativa privacy definitiva, nessun segnaposto', async () => {
+  const { INFORMATIVA_PRIVACY, VERSIONE_TESTO_CONSENSO, CONSENSI } = await import('./content.js')
+  assert.ok(!INFORMATIVA_PRIVACY.includes('[['), 'nessun segnaposto rimasto')
+  assert.notEqual(VERSIONE_TESTO_CONSENSO, 'bozza-0')
+  for (const c of CONSENSI) assert.ok(c.testo.length > 0)
+})
+
 test('firestore.rules usa la stessa email riservata di accesso.js', async () => {
   const { EMAIL_RISULTATI } = await import('./accesso.js')
   const regole = readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8')

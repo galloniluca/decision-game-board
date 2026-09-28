@@ -498,8 +498,8 @@ risultato a 360/390/1280 px. **Non verificato**: sito pubblicato, Firestore real
 
 Da fare prima dell'evento:
 - [x] Frasi di lettura definitive in `src/survey/frasi.js` (da `FRASI_LETTURA.md`)
-- [ ] Sostituire il testo `INFORMATIVA_PRIVACY` in `src/survey/content.js` (aggiornando
-      `VERSIONE_TESTO_CONSENSO`)
+- [x] Testo `INFORMATIVA_PRIVACY` definitivo in `src/survey/content.js`, versione
+      `VERSIONE_TESTO_CONSENSO = '2026-09-25-v2'` (passo 6)
 - [ ] Verificare la regione del database Firestore; se non è in UE creare un progetto separato
       e impostare le `VITE_SURVEY_FIREBASE_*` nelle variabili di build di Cloudflare
 - [ ] Pubblicare `firestore.rules` (passo 4)
@@ -644,3 +644,28 @@ Checklist manuale (dopo i passi in console):
 4. Scarica il CSV e aprilo con Excel: colonne separate, accenti corretti
 5. Ripeti il punto 5 della checklist del survey (lettura dalla console del browser senza accesso:
    deve fallire)
+
+## Survey: informativa privacy e testi di consenso definitivi
+
+Testo fornito da BPR (verificato su registro imprese), sostituisce il segnaposto.
+
+- `src/survey/content.js`: `INFORMATIVA_PRIVACY` è ora il testo completo dell'informativa
+  (art. 13 GDPR: titolare, dati trattati, finalità e basi giuridiche, destinatari, tempi di
+  conservazione, conferimento, decisioni automatizzate, diritti dell'interessato); resta una
+  singola stringa con paragrafi separati da riga vuota, così non serve toccare `SchermataConsenso`
+  né il CSS (`.survey-informativa` ha già `white-space: pre-line` e uno scroll interno per i testi
+  lunghi). `VERSIONE_TESTO_CONSENSO` passa da `'bozza-0'` a `'2026-09-25-v2'`
+- `CONSENSI`: testo aggiornato delle tre caselle (compresa quella facoltativa, ora "BPR Group" e
+  "approfondire i risultati del mio questionario"), invariati id, obbligatorietà e ordine
+- Due punti restano da confermare a chi ha scritto il testo (non bloccano la pubblicazione, ma
+  vanno verificati prima): se Nuova Simonelli riceve o meno dati individuali dei partecipanti, e
+  se 12 mesi è la conservazione corretta per BPR. Se cambia qualcosa, si aggiorna il testo in
+  `content.js` e si incrementa di nuovo `VERSIONE_TESTO_CONSENSO`
+- Nuovo test in `content.test.js`: nessun segnaposto `[[` residuo nell'informativa, versione
+  diversa da `'bozza-0'`, testo non vuoto per ciascuna delle tre caselle
+
+### Come testare
+
+1. `npm test`: 30 test verdi
+2. Apri `/survey`: nella card sotto "Informativa privacy" compare il testo completo (scorrevole),
+   sotto "Versione testo: 2026-09-25-v2"; le tre caselle hanno il nuovo testo

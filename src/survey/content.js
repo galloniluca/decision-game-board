@@ -7,22 +7,43 @@ export const CAMPAGNA = '2026-09-29-belforte'
 
 // Versione del testo di informativa e consensi salvata con ogni risposta.
 // Va incrementata quando cambia INFORMATIVA_PRIVACY o il testo dei consensi.
-export const VERSIONE_TESTO_CONSENSO = 'bozza-0'
+export const VERSIONE_TESTO_CONSENSO = '2026-09-25-v2'
 
-export const INFORMATIVA_PRIVACY = '[[INFORMATIVA_PRIVACY — testo da fornire da BPR]]'
+// Testo definitivo (BPR, 2026-09-25). Paragrafi separati da riga vuota, punti elenco con "- ":
+// .survey-informativa ha già white-space: pre-line, non serve altro markup.
+export const INFORMATIVA_PRIVACY = `Informativa sul trattamento dei dati personali (art. 13 GDPR)
+
+Titolare del trattamento. BPR Group S.r.l., Via IV Novembre 120, 46024 Moglia (MN), P.IVA 01920580204. Contatto per la privacy: amministrazione@bprgroup.it.
+
+Quali dati trattiamo. Nome e cognome, azienda, email, ruolo, settore e dimensione aziendale, e le risposte al questionario. Non raccogliamo dati particolari né altri dati sensibili.
+
+Perché e su quale base.
+- Calcolare il tuo risultato e inviarti il confronto con gli altri partecipanti (benchmark). È il servizio che ci chiedi compilando il questionario (art. 6.1.b GDPR).
+- Costruire benchmark aggregati e anonimi, anche in analisi future. Dopo l'elaborazione i dati vengono usati solo in forma aggregata e anonima, senza possibilità di risalire a te. Base giuridica: legittimo interesse di BPR a produrre statistiche di settore (art. 6.1.f GDPR).
+- Contattarti per approfondire i risultati. Solo se spunti la casella facoltativa (art. 6.1.a GDPR). Puoi revocare il consenso in qualsiasi momento, senza conseguenze sul resto.
+
+Chi può vedere i dati. Personale BPR autorizzato. Il servizio di raccolta è fornito da Google Cloud (Firebase) e Cloudflare, che agiscono come responsabili del trattamento. Non condividiamo i tuoi dati individuali con Nuova Simonelli né con altri co-organizzatori dell'evento. Se i dati fossero trattati anche fuori dallo Spazio Economico Europeo, ciò avviene nel rispetto delle garanzie previste dal GDPR, incluse le clausole contrattuali standard della Commissione Europea.
+
+Per quanto tempo. I dati personali sono conservati per 12 mesi dalla raccolta e poi cancellati. Le statistiche anonime possono essere conservate senza limiti di tempo.
+
+Il conferimento dei dati. Nome, azienda ed email sono necessari per generare e inviarti il tuo risultato. Senza questi dati non possiamo fornire il servizio.
+
+Decisioni automatizzate. Il punteggio viene calcolato automaticamente dalle tue risposte. Non produce effetti giuridici né decisioni che ti riguardano.
+
+I tuoi diritti. Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opposizione scrivendo a amministrazione@bprgroup.it. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (www.garanteprivacy.it).`
 
 export const CONSENSI = [
-  { id: 'privacy', obbligatorio: true, testo: "Ho letto l'informativa privacy" },
+  { id: 'privacy', obbligatorio: true, testo: "Ho letto l'informativa privacy." },
   {
     id: 'benchmark_aggregato',
     obbligatorio: true,
     testo:
-      'Acconsento all\'uso dei miei dati in forma aggregata e anonima per costruire benchmark, anche in analisi future',
+      "Acconsento all'uso dei miei dati in forma aggregata e anonima per costruire benchmark, anche in analisi future.",
   },
   {
     id: 'contatto_bpr',
     obbligatorio: false,
-    testo: 'Acconsento a essere contattato da BPR per approfondimenti sui risultati',
+    testo: 'Acconsento a essere contattato da BPR Group per approfondire i risultati del mio questionario.',
   },
 ]
 
