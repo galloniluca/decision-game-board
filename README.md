@@ -500,9 +500,11 @@ Da fare prima dell'evento:
 - [x] Frasi di lettura definitive in `src/survey/frasi.js` (da `FRASI_LETTURA.md`)
 - [x] Testo `INFORMATIVA_PRIVACY` definitivo in `src/survey/content.js`, versione
       `VERSIONE_TESTO_CONSENSO = '2026-09-25-v2'` (passo 6)
-- [ ] Verificare la regione del database Firestore; se non è in UE creare un progetto separato
-      e impostare le `VITE_SURVEY_FIREBASE_*` nelle variabili di build di Cloudflare
-- [ ] Pubblicare `firestore.rules` (passo 4)
+- [x] Regione del database Firestore del gioco verificata: **UE** (eur3). Il survey riusa lo
+      stesso progetto, nessuna `VITE_SURVEY_FIREBASE_*` da impostare
+- [ ] Pubblicare `firestore.rules` sul progetto Firebase del gioco (passo 4)
+- [ ] Attivare Authentication (Email/password) e creare l'utente riservato per
+      `/survey-risultati` (sezione "Risultati survey" più sotto)
 - [ ] Generare il QR verso `https://<dominio>/survey`
 
 Checklist su dispositivi reali (sito pubblicato):
