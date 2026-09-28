@@ -541,6 +541,10 @@ label {
 }
 
 .dash-card {
+  /* Container per i propri discendenti (cqh/cqw sotto): le proprietà qui sopra restano in
+     vh/vw perché un elemento non può misurare se stesso col proprio container query. */
+  container-type: size;
+  container-name: dashcard;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -556,7 +560,7 @@ label {
 .dash-card__nome {
   margin: 0;
   flex: none;
-  font-size: clamp(1rem, 2vh, 1.4rem);
+  font-size: clamp(1rem, 7cqh, 1.4rem);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -567,7 +571,7 @@ label {
   flex: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(0.3rem, 0.8vw, 0.6rem);
+  gap: clamp(0.3rem, 2cqw, 0.6rem);
 }
 
 .dash-round-chip {
@@ -575,14 +579,14 @@ label {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.15rem, 0.5vh, 0.3rem);
-  padding: clamp(0.25rem, 0.8vh, 0.45rem) 0.2rem;
+  gap: clamp(0.15rem, 1.5cqh, 0.3rem);
+  padding: clamp(0.25rem, 2cqh, 0.45rem) 0.2rem;
   border-radius: 8px;
   background: var(--surface-2);
 }
 
 .dash-round-chip__label {
-  font-size: clamp(0.6rem, 1vh, 0.75rem);
+  font-size: clamp(0.6rem, 3cqh, 0.75rem);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
@@ -590,7 +594,7 @@ label {
 }
 
 .dash-round-chip__valore {
-  font-size: clamp(1.2rem, 3vh, 2rem);
+  font-size: clamp(1.2rem, 9cqh, 2rem);
   font-weight: 800;
   line-height: 1;
 }
@@ -781,53 +785,56 @@ label {
 
 /* Board Dashboard: il box KPI di un round sta sotto il suo round-chip (solo se il
    round è già chiuso), la situazione attuale è grande e centrata sotto la griglia.
-   Dimensioni scalate in vh per restare sempre dentro alla card senza scroll (TV). */
+   Dimensioni in cqh/cqw (container query units, relative a .dash-card, il container
+   size-container qui sopra): a differenza di vh/vw restano proporzionate alla card
+   anche quando la griglia dei tavoli ha più righe (es. 7-9 tavoli), invece di
+   sforare lo spazio disponibile e finire tagliate da overflow: hidden. */
 
 .dash-round-colonna {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.25rem, 0.6vh, 0.4rem);
+  gap: clamp(0.25rem, 3cqh, 0.4rem);
 }
 
 .dash-round-colonna .istogramma-round {
   width: 100%;
-  padding: clamp(0.25rem, 0.6vh, 0.4rem) clamp(0.2rem, 0.4vw, 0.35rem);
-  gap: clamp(0.15rem, 0.4vh, 0.3rem);
+  padding: clamp(0.25rem, 3cqh, 0.4rem) clamp(0.2rem, 2cqw, 0.35rem);
+  gap: clamp(0.15rem, 2cqh, 0.3rem);
 }
 
 .dash-round-colonna .istogramma-round__barre {
-  height: clamp(26px, 7vh, 46px);
-  gap: clamp(0.15rem, 0.35vw, 0.3rem);
+  height: clamp(20px, 20cqh, 46px);
+  gap: clamp(0.15rem, 1.5cqw, 0.3rem);
 }
 
 .dash-round-colonna .istogramma-round__barra {
-  width: clamp(6px, 0.9vw, 10px);
+  width: clamp(6px, 4cqw, 10px);
 }
 
 .dash-round-colonna .istogramma-round__kpi-label {
-  font-size: clamp(0.5rem, 0.9vh, 0.65rem);
+  font-size: clamp(0.5rem, 4cqh, 0.65rem);
 }
 
 .dash-card__grafico .istogramma-round--grande {
-  padding: clamp(0.6rem, 1.8vh, 1rem) clamp(0.8rem, 1.6vw, 1.2rem);
+  padding: clamp(0.5rem, 6cqh, 1rem) clamp(0.7rem, 6cqw, 1.2rem);
 }
 
 .dash-card__grafico .istogramma-round--grande .istogramma-round__barre {
-  height: clamp(55px, 16vh, 100px);
-  gap: clamp(0.4rem, 1vw, 0.7rem);
+  height: clamp(40px, 35cqh, 100px);
+  gap: clamp(0.4rem, 4cqw, 0.7rem);
 }
 
 .dash-card__grafico .istogramma-round--grande .istogramma-round__barra {
-  width: clamp(14px, 1.8vw, 22px);
+  width: clamp(12px, 7cqw, 22px);
 }
 
 .dash-card__grafico .istogramma-round--grande .istogramma-round__label {
-  font-size: clamp(0.65rem, 1.3vh, 0.9rem);
+  font-size: clamp(0.6rem, 4.5cqh, 0.9rem);
 }
 
 .dash-card__grafico .istogramma-round--grande .istogramma-round__kpi-label {
-  font-size: clamp(0.6rem, 1.1vh, 0.8rem);
+  font-size: clamp(0.55rem, 4cqh, 0.8rem);
 }
 
 /* ---- Status text ---- */
