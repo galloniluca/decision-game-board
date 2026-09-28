@@ -188,7 +188,7 @@ function Tavolo() {
 
         {errore && <p className="status-error">❌ {errore}</p>}
 
-        {roundAperto && (
+        {roundAperto ? (
           <div className="card">
             <div
               style={{
@@ -250,7 +250,16 @@ function Tavolo() {
               {testoBottone}
             </button>
           </div>
-        )}
+        ) : partitaConclusa ? (
+          <div className="card" style={{ textAlign: 'center' }}>
+            <span className="badge-pill chiuso">Partita conclusa</span>
+            <h2 style={{ margin: '0.75rem 0 0.25rem' }}>Il gioco è finito</h2>
+            <p className="status-muted">
+              Grazie per aver partecipato! Aiutaci con due minuti del tuo tempo:
+            </p>
+            <QrSurvey compatta />
+          </div>
+        ) : null}
 
         <div className="card">
           <h3>I tuoi KPI per round</h3>
@@ -289,13 +298,6 @@ function Tavolo() {
             </>
           )}
         </div>
-
-        {partitaConclusa && (
-          <div className="card">
-            <h3>Questionario di fine evento</h3>
-            <QrSurvey compatta />
-          </div>
-        )}
       </div>
     </div>
   )
