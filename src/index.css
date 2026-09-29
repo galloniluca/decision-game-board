@@ -577,6 +577,41 @@ label {
   text-overflow: ellipsis;
 }
 
+/* Card extra nella griglia dei risultati finali, con il QR del questionario. */
+
+.dash-card--qr {
+  align-items: center;
+  text-align: center;
+}
+
+.dash-card__qr {
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-card--qr .qr-survey {
+  gap: clamp(0.2rem, 1.5cqh, 0.5rem);
+  max-height: 100%;
+}
+
+.dash-card--qr .qr-survey.qr-survey--compatta .qr-survey__img {
+  width: min(50cqh, 60cqw, 220px);
+  max-width: 100%;
+}
+
+.dash-card--qr .qr-survey__testo {
+  font-size: clamp(0.55rem, 4.5cqh, 0.95rem);
+}
+
+.dash-card--qr .qr-survey__url {
+  font-size: clamp(0.45rem, 3cqh, 0.8rem);
+}
+
 /* Corpo della scheda tavolo: round 1-2 piccoli a sinistra, situazione attuale grande al
    centro, round 3-4 piccoli a destra. Tutte e tre le zone condividono la stessa altezza
    disponibile (niente più "riga dei round" impilata sopra il box grande), cosi anche con

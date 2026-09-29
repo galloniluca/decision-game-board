@@ -114,6 +114,10 @@ function Dashboard() {
 
   const colonne = tavoli.length <= 4 ? 2 : 3
   const righe = Math.ceil(tavoli.length / colonne) || 1
+  // A partita conclusa la griglia ha una card in più per il QR del questionario.
+  const celleFinali = tavoli.length + 1
+  const colonneFinali = celleFinali <= 4 ? 2 : 3
+  const righeFinali = Math.ceil(celleFinali / colonneFinali) || 1
 
   return (
     <div className="dashboard-tv">
@@ -130,11 +134,37 @@ function Dashboard() {
 
       {errore && <p className="status-error">❌ {errore}</p>}
 
-      {mostraRisultati ? (
+      {partitaConclusa ? (
         <>
-          <h2 style={{ flex: 'none', margin: '0.5rem 0 0' }}>
-            {partitaConclusa ? 'Partita conclusa — risultati finali' : `Risultati Round ${round}`}
-          </h2>
+          <h2 style={{ flex: 'none', margin: '0.5rem 0 0' }}>Partita conclusa — risultati finali</h2>
+          <div
+            className="dashboard-tv__grid"
+            style={{
+              gridTemplateColumns: `repeat(${colonneFinali}, 1fr)`,
+              gridTemplateRows: `repeat(${righeFinali}, 1fr)`,
+            }}
+          >
+            {tavoli.map((tavolo) => (
+              <TavoloScheda
+                key={tavolo.id}
+                tavolo={tavolo}
+                scelteTavolo={scelteTutte.filter((s) => s.tavolo_id === Number(tavolo.id))}
+                opzioniMap={opzioniMap}
+                kpiBaseline={sessione.kpi_baseline ?? KPI_BASE_DEFAULT}
+                ultimoRoundRivelato={ultimoRoundRivelato}
+              />
+            ))}
+            <div className="dash-card dash-card--qr">
+              <h3 className="dash-card__nome">Questionario</h3>
+              <div className="dash-card__qr">
+                <QrSurvey compatta />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : mostraRisultati ? (
+        <>
+          <h2 style={{ flex: 'none', margin: '0.5rem 0 0' }}>Risultati Round {round}</h2>
           <div
             className="dashboard-tv__grid"
             style={{
@@ -180,12 +210,6 @@ function Dashboard() {
               )
             })}
           </div>
-        </div>
-      ) : partitaConclusa ? (
-        <div className="dashboard-live">
-          <ScenaEvento titolo="Fine del gioco">
-            <QrSurvey />
-          </ScenaEvento>
         </div>
       ) : (
         <div className="dashboard-live">
