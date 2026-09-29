@@ -159,8 +159,10 @@ code {
   text-decoration: none;
 }
 
-.nav-links a:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .nav-links a:hover {
+    color: var(--accent);
+  }
 }
 
 /* ---- Card ---- */
@@ -204,8 +206,10 @@ code {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.btn:hover:not(:disabled) {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 .btn:disabled {
@@ -219,9 +223,11 @@ code {
   color: #fff;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-strong-hover);
-  border-color: var(--accent-strong-hover);
+@media (hover: hover) {
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-strong-hover);
+    border-color: var(--accent-strong-hover);
+  }
 }
 
 .btn-danger {
@@ -230,9 +236,11 @@ code {
   color: var(--danger);
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: var(--danger);
-  color: #fff;
+@media (hover: hover) {
+  .btn-danger:hover:not(:disabled) {
+    background: var(--danger);
+    color: #fff;
+  }
 }
 
 .btn-sm {
@@ -312,8 +320,10 @@ label {
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.option-btn:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .option-btn:hover {
+    border-color: var(--accent);
+  }
 }
 
 .option-btn.selected {
@@ -1364,11 +1374,17 @@ label {
   cursor: pointer;
 }
 
-.risultati-riga:hover,
 .risultati-riga:focus-visible,
 .risultati-riga.aperta {
   background: var(--surface-2);
   outline: none;
+}
+
+@media (hover: hover) {
+  .risultati-riga:hover {
+    background: var(--surface-2);
+    outline: none;
+  }
 }
 
 .risultati-riga-dettaglio > td {

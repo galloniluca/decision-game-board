@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
+import { useAggiornaAlRitorno } from '../lib/riconnessione'
 import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
@@ -65,6 +66,18 @@ function Regia() {
     )
     return () => unsub()
   }, [])
+
+  // Se il browser resta a lungo in background la connessione realtime puo' restare
+  // interrotta in silenzio: al ritorno si rilegge subito lo stato invece di aspettare
+  // che onSnapshot si riprenda da solo.
+  useAggiornaAlRitorno(() => {
+    getDoc(doc(db, 'sessione', 'corrente'))
+      .then((snap) => setSessione(snap.data({ serverTimestamps: 'estimate' })))
+      .catch(() => {})
+    getDocs(collection(db, 'scelte'))
+      .then((snap) => setScelteTutte(snap.docs.map((d) => d.data())))
+      .catch(() => {})
+  })
 
   async function apriRound() {
     setAzioneInCorso(true)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
+import { useAggiornaAlRitorno } from '../lib/riconnessione'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaMMSS, secondiRimanenti } from '../lib/tempo'
 import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
@@ -61,6 +62,18 @@ function Dashboard() {
       unsubScelte()
     }
   }, [])
+
+  // Se il browser resta a lungo in background la connessione realtime puo' restare
+  // interrotta in silenzio: al ritorno si rilegge subito lo stato invece di aspettare
+  // che onSnapshot si riprenda da solo (puo' volerci molto su rete mobile).
+  useAggiornaAlRitorno(() => {
+    getDoc(doc(db, 'sessione', 'corrente'))
+      .then((snap) => setSessione(snap.data({ serverTimestamps: 'estimate' })))
+      .catch(() => {})
+    getDocs(collection(db, 'scelte'))
+      .then((snap) => setScelteTutte(snap.docs.map((d) => d.data())))
+      .catch(() => {})
+  })
 
   // Tick ogni secondo solo per aggiornare il countdown testuale in alto.
   useEffect(() => {

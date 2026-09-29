@@ -12,6 +12,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
+import { useAggiornaAlRitorno } from '../lib/riconnessione'
 import { LETTERE, ROUNDS, idOpzione, idScelta } from '../lib/costanti'
 import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT } from '../lib/tempo'
@@ -91,6 +92,19 @@ function Tavolo() {
       unsubScelte()
     }
   }, [id])
+
+  // Se il telefono si blocca o il browser va in background, la connessione realtime puo'
+  // restare interrotta in silenzio: al ritorno (sblocco, cambio app, rete che torna) si
+  // rilegge subito la sessione e le proprie scelte, invece di restare su dati vecchi finche'
+  // non si ricarica a mano.
+  useAggiornaAlRitorno(() => {
+    getDoc(doc(db, 'sessione', 'corrente'))
+      .then((snap) => setSessione(snap.data({ serverTimestamps: 'estimate' })))
+      .catch(() => {})
+    getDocs(query(collection(db, 'scelte'), where('tavolo_id', '==', Number(id))))
+      .then((snap) => setScelteTavolo(snap.docs.map((d) => d.data())))
+      .catch(() => {})
+  })
 
   // Quando cambia il round attivo (o arrivano nuove scelte), riparte dalla propria scelta per quel round.
   useEffect(() => {
