@@ -32,6 +32,11 @@ service cloud.firestore {
       allow create: if rispostaSurveyValida(request.resource.data);
     }
 
+    // Impostazioni della pagina riservata (es. unioni dei nomi azienda): solo l'utente riservato.
+    match /survey_config/{id} {
+      allow read, write: if utenteRisultati();
+    }
+
     function utenteRisultati() {
       return request.auth != null
         && request.auth.token.email == 'risultati-survey@example.com'

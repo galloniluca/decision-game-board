@@ -611,6 +611,12 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
   - **report personale PDF** di ogni partecipante e **ZIP con tutti i report** filtrati più
     `elenco-invii.csv` (nome, azienda, email, file). Nei report il confronto usa sempre tutte le
     risposte della campagna della persona; la media di settore compare solo con almeno 5 risposte
+  - **aziende**: i nomi scritti con maiuscole, spazi, punti o forma societaria diversi (srl, spa,
+    s.p.a., group, & C. …) sono uniti in automatico (`src/survey/aziende.js`, con test); i nomi
+    simili ("Simonelli Group" / "Nuova Simonelli") compaiono come possibili doppioni da unire o
+    segnare come diversi. Unioni, nomi scelti e coppie diverse sono salvati in
+    `survey_config/aziende` (leggibile e scrivibile solo dall'utente riservato) e valgono per filtro
+    Azienda, ordinamento e colonna `azienda_raggruppata` del CSV
   - **eliminazione** delle risposte selezionate (prove, richieste di cancellazione), con conferma:
     è definitiva. Richiede la versione di `firestore.rules` che permette `delete` all'utente riservato
 - I punteggi sono sempre **ricalcolati dalle risposte** (`src/survey/risultati.js`, con test)
@@ -636,8 +642,8 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
 
 ### Test
 
-- Automatici: `npm test` (43 test, compresi aggregazioni, filtri, report ed export CSV/JSON) e
-  `npm run test:rules` (43 test: l'utente riservato può leggere e cancellare ma non modificare; un
+- Automatici: `npm test` (54 test, compresi aggregazioni, filtri, report ed export CSV/JSON) e
+  `npm run test:rules` (44 test: l'utente riservato può leggere e cancellare ma non modificare; un
   altro utente autenticato, lo stesso indirizzo con accesso Google o un visitatore anonimo non
   possono leggere; il game resta aperto)
 - Verificato in locale sugli emulatori Firestore + Authentication con Chromium headless: un

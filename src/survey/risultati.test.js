@@ -152,3 +152,18 @@ test('ordinaRisposte: a parità di valore prima la più recente', () => {
   ]
   assert.deepEqual(ordinaRisposte(lista, 'settore', 'asc').map((x) => x.id), ['nuova', 'vecchia'])
 })
+
+test('filtro e ricerca per azienda raggruppata; CSV e JSON con il nome raggruppato', () => {
+  const lista = preparaRisposte([
+    { ...risposta('a', 'Altro', 3), aziendaChiave: 'rossi', aziendaNome: 'Rossi SpA' },
+    { ...risposta('b', 'Altro', 3), aziendaChiave: 'bianchi', aziendaNome: 'Bianchi' },
+  ])
+  const ids = (f) => filtraRisposte(lista, { ...FILTRI_VUOTI, ...f }).map((r) => r.id)
+  assert.deepEqual(ids({ azienda: 'rossi' }), ['a'])
+  assert.deepEqual(ids({ testo: 'rossi spa' }), ['a'])
+  const riga = creaCsv(lista.slice(0, 1)).slice(1).trim().split('\r\n')[1].split(';')
+  assert.equal(riga[COLONNE_CSV.indexOf('azienda_raggruppata')], 'Rossi SpA')
+  const doc = JSON.parse(creaJson(lista.slice(0, 1), 'c')).documenti[0]
+  assert.equal(doc.azienda_raggruppata, 'Rossi SpA')
+  assert.equal('aziendaChiave' in doc, false)
+})

@@ -60,6 +60,7 @@ export const COLONNE_CSV = [
   'creato_at',
   'nome',
   'azienda',
+  'azienda_raggruppata',
   'email',
   'ruolo',
   'settore',
@@ -85,6 +86,7 @@ export function creaCsv(risposte) {
       dataIso(r.creato_at),
       a.nome,
       a.azienda,
+      r.aziendaNome ?? a.azienda,
       a.email,
       a.ruolo,
       a.settore,
@@ -104,8 +106,9 @@ export function creaCsv(risposte) {
 
 // JSON leggibile, con i timestamp in ISO (stesso formato dello script di export).
 export function creaJson(risposte, campagna) {
-  const documenti = risposte.map(({ valida: _v, punteggi, ...resto }) => ({
+  const documenti = risposte.map(({ valida: _v, punteggi, aziendaChiave: _k, aziendaNome, ...resto }) => ({
     ...resto,
+    azienda_raggruppata: aziendaNome ?? resto.anagrafica?.azienda,
     creato_at: dataIso(resto.creato_at),
     punteggi_ricalcolati: punteggi,
   }))
@@ -118,7 +121,7 @@ export function creaJson(risposte, campagna) {
 
 // ---- Filtri della pagina riservata (campagna, periodo, settore, dimensione, testo) ----
 
-export const FILTRI_VUOTI = { campagna: '', da: '', a: '', settore: '', dimensione: '', testo: '' }
+export const FILTRI_VUOTI = { campagna: '', da: '', a: '', settore: '', dimensione: '', azienda: '', testo: '' }
 
 export function millisecondi(valore) {
   if (!valore) return null
@@ -160,12 +163,15 @@ export function filtraRisposte(risposte, filtri) {
     if (filtri.campagna && r.campagna !== filtri.campagna) return false
     if (filtri.settore && an.settore !== filtri.settore) return false
     if (filtri.dimensione && an.dimensione !== filtri.dimensione) return false
+    if (filtri.azienda && r.aziendaChiave !== filtri.azienda) return false
     if (da !== null || a !== null) {
       const t = millisecondi(r.creato_at)
       if (t === null || (da !== null && t < da) || (a !== null && t >= a)) return false
     }
     if (testo) {
-      const campi = ['nome', 'azienda', 'email', 'settore', 'ruolo'].map((k) => String(an[k] ?? '').toLowerCase())
+      const campi = [...['nome', 'azienda', 'email', 'settore', 'ruolo'].map((k) => an[k]), r.aziendaNome].map((v) =>
+        String(v ?? '').toLowerCase()
+      )
       if (!campi.some((c) => c.includes(testo))) return false
     }
     return true
@@ -189,7 +195,7 @@ const collatore = new Intl.Collator('it', { sensitivity: 'base', numeric: true }
 const CHIAVI_ORDINAMENTO = {
   data: (r) => millisecondi(r.creato_at) ?? 0,
   nome: (r) => r.anagrafica?.nome ?? '',
-  azienda: (r) => r.anagrafica?.azienda ?? '',
+  azienda: (r) => r.aziendaNome ?? r.anagrafica?.azienda ?? '',
   settore: (r) => r.anagrafica?.settore ?? '',
   totale: (r) => (r.valida ? r.punteggi.totale : -1),
   contatto: (r) => (r.consenso?.contatto_bpr ? 1 : 0),

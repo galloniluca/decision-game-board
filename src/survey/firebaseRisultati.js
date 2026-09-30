@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { collection, doc, onSnapshot, writeBatch } from 'firebase/firestore'
+import { collection, doc, onSnapshot, setDoc, writeBatch } from 'firebase/firestore'
 import { appSurvey, dbSurvey, COLLEZIONE_SURVEY } from './firebaseSurvey'
 import { EMAIL_RISULTATI } from './accesso'
 
@@ -27,6 +27,21 @@ export function osservaRisposte(onDati, onErrore) {
     (snap) => onDati(snap.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }))),
     onErrore
   )
+}
+
+// Unioni e nomi delle aziende decisi nella pagina riservata (vedi aziende.js).
+const rifConfigAziende = () => doc(dbSurvey, 'survey_config', 'aziende')
+
+export function osservaConfigAziende(onDati, onErrore) {
+  return onSnapshot(rifConfigAziende(), (snap) => onDati(snap.exists() ? snap.data() : null), onErrore)
+}
+
+export function salvaConfigAziende(config) {
+  return setDoc(rifConfigAziende(), {
+    unioni: config.unioni ?? {},
+    nomi: config.nomi ?? {},
+    distinte: config.distinte ?? [],
+  })
 }
 
 // Cancellazione definitiva (risposte di prova o richieste di cancellazione GDPR).

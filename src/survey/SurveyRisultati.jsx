@@ -17,7 +17,17 @@ import {
   periodoRapido,
   preparaRisposte,
 } from './risultati'
-import { accedi, eliminaRisposte, esci, osservaAccesso, osservaRisposte } from './firebaseRisultati'
+import {
+  accedi,
+  eliminaRisposte,
+  esci,
+  osservaAccesso,
+  osservaConfigAziende,
+  osservaRisposte,
+  salvaConfigAziende,
+} from './firebaseRisultati'
+import { CONFIG_AZIENDE_VUOTA, mappaAziende, raggruppaAziende } from './aziende'
+import SezioneAziende from './SezioneAziende'
 import Radar from './Radar'
 import ReportPersonale from './ReportPersonale'
 import { creaZipReport, scaricaBlob } from './pdfReport'
@@ -190,7 +200,7 @@ function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto, onApri
   )
 }
 
-function Filtri({ filtri, onCambia, campagne, trovate, totali }) {
+function Filtri({ filtri, onCambia, campagne, aziende, trovate, totali }) {
   const imposta = (campo) => (e) => onCambia({ ...filtri, [campo]: e.target.value })
   return (
     <section className="card risultati-filtri">
@@ -243,6 +253,17 @@ function Filtri({ filtri, onCambia, campagne, trovate, totali }) {
           </select>
         </div>
         <div className="survey-campo">
+          <label htmlFor="filtro-azienda">Azienda</label>
+          <select id="filtro-azienda" className="input" value={filtri.azienda} onChange={imposta('azienda')}>
+            <option value="">Tutte</option>
+            {aziende.map((g) => (
+              <option key={g.chiave} value={g.chiave}>
+                {g.nome} ({g.n})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="survey-campo">
           <label htmlFor="filtro-testo" title="Cerca in nome, azienda, email e ruolo">Cerca</label>
           <input
             id="filtro-testo"
@@ -278,7 +299,7 @@ function Filtri({ filtri, onCambia, campagne, trovate, totali }) {
   )
 }
 
-function Contenuto({ tutte, onApriReport }) {
+function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreConfig }) {
   const campagne = useMemo(() => elencoCampagne(tutte), [tutte])
   const [filtri, setFiltri] = useState(() => ({
     ...FILTRI_VUOTI,
@@ -393,6 +414,7 @@ function Contenuto({ tutte, onApriReport }) {
       <Filtri
         filtri={filtri}
         onCambia={cambiaFiltri}
+        aziende={gruppiAziende}
         campagne={campagne}
         trovate={risposte.length}
         totali={tutte.length}
@@ -569,7 +591,18 @@ function Contenuto({ tutte, onApriReport }) {
             ))}
           </div>
 
-          <section className="card">
+          <SezioneAziende
+            gruppi={gruppiAziende}
+            config={configAziende}
+            onSalva={salvaConfigAziende}
+            errore={erroreConfig}
+            onVediRisposte={(chiave) => {
+              cambiaFiltri({ ...filtri, azienda: chiave })
+              document.getElementById('partecipanti')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          />
+
+          <section className="card" id="partecipanti">
             <h2>Partecipanti ({visibili.length})</h2>
             <div className="risultati-selezione">
               <span className="status-muted">
@@ -635,7 +668,12 @@ function Contenuto({ tutte, onApriReport }) {
                           </td>
                           <td>{formattaData(r.creato_at)}</td>
                           <td>{r.anagrafica?.nome}</td>
-                          <td>{r.anagrafica?.azienda}</td>
+                          <td>
+                            {r.aziendaNome ?? r.anagrafica?.azienda}
+                            {r.aziendaNome && r.aziendaNome !== r.anagrafica?.azienda?.trim() && (
+                              <span className="risultati-scritto">scritto: {r.anagrafica?.azienda}</span>
+                            )}
+                          </td>
                           <td>{r.anagrafica?.settore}</td>
                           <td>{r.valida ? pct(r.punteggi.totale) : '–'}</td>
                           <td>{r.valida ? livello(r.punteggi.totale).nome : 'incompleta'}</td>
@@ -674,7 +712,15 @@ function SurveyRisultati() {
   const [erroreLettura, setErroreLettura] = useState(null)
   const [reportId, setReportId] = useState(null)
   const [scrollLista, setScrollLista] = useState(0)
-  const risposte = useMemo(() => (documenti ? preparaRisposte(documenti) : []), [documenti])
+  const [configAziende, setConfigAziende] = useState(CONFIG_AZIENDE_VUOTA)
+  const [erroreConfig, setErroreConfig] = useState(null)
+  const preparate = useMemo(() => (documenti ? preparaRisposte(documenti) : []), [documenti])
+  const gruppiAziende = useMemo(() => raggruppaAziende(preparate, configAziende), [preparate, configAziende])
+  // Ogni risposta porta con sé il gruppo azienda (chiave e nome) per filtri, ordinamento e CSV.
+  const risposte = useMemo(() => {
+    const mappa = mappaAziende(gruppiAziende)
+    return preparate.map((r) => ({ ...r, aziendaChiave: mappa.get(r.id)?.chiave, aziendaNome: mappa.get(r.id)?.nome }))
+  }, [preparate, gruppiAziende])
   const rispostaReport = reportId ? risposte.find((r) => r.id === reportId) : null
 
   function apriReport(id) {
@@ -723,6 +769,23 @@ function SurveyRisultati() {
     )
   }, [utente])
 
+  // Se le regole non sono ancora aggiornate il raggruppamento automatico funziona lo stesso.
+  useEffect(() => {
+    if (!utente) return undefined
+    return osservaConfigAziende(
+      (dati) => {
+        setConfigAziende({ ...CONFIG_AZIENDE_VUOTA, ...(dati ?? {}) })
+        setErroreConfig(null)
+      },
+      (err) =>
+        setErroreConfig(
+          err?.code === 'permission-denied'
+            ? 'Unioni manuali non disponibili: pubblica dalla console la versione aggiornata di firestore.rules. Il raggruppamento automatico funziona lo stesso.'
+            : `Impossibile leggere le unioni delle aziende (${err?.code ?? err?.message}).`
+        )
+    )
+  }, [utente])
+
   let corpo
   if (utente === undefined || (accesso.inCorso && !utente)) {
     corpo = <p className="status-muted">Verifica accesso...</p>
@@ -733,7 +796,15 @@ function SurveyRisultati() {
   } else if (!documenti) {
     corpo = <p className="status-muted">Caricamento risposte...</p>
   } else {
-    corpo = <Contenuto tutte={risposte} onApriReport={apriReport} />
+    corpo = (
+      <Contenuto
+        tutte={risposte}
+        onApriReport={apriReport}
+        gruppiAziende={gruppiAziende}
+        configAziende={configAziende}
+        erroreConfig={erroreConfig}
+      />
+    )
   }
 
   return (

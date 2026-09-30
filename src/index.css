@@ -1936,3 +1936,69 @@ th[aria-sort='descending'] .risultati-ordina__freccia {
 .risultati-nota__selezione {
   color: var(--warning);
 }
+
+/* Pulizia dei nomi azienda (pagina risultati). */
+.risultati-scritto {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.aziende-doppioni {
+  list-style: none;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aziende-doppione {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.aziende-doppione__nomi {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.aziende-doppione__vs {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.aziende-doppione__azioni,
+.aziende-azioni {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.aziende-elenco summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.aziende-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -200,6 +200,16 @@ describe('survey_risposte: utente riservato della pagina risultati', () => {
     await assertFails(getDocs(collection(google, 'survey_risposte')))
   })
 
+  test('survey_config: solo l\'utente riservato legge e scrive', async () => {
+    await assertSucceeds(setDoc(doc(admin, 'survey_config', 'aziende'), { unioni: {} }))
+    await assertSucceeds(getDoc(doc(admin, 'survey_config', 'aziende')))
+    await assertFails(getDoc(doc(altro, 'survey_config', 'aziende')))
+    await assertFails(setDoc(doc(altro, 'survey_config', 'aziende'), { unioni: {} }))
+    const anonimo = env.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anonimo, 'survey_config', 'aziende')))
+    await assertFails(setDoc(doc(anonimo, 'survey_config', 'aziende'), { unioni: {} }))
+  })
+
   test('le collezioni del game restano aperte anche da autenticato', async () => {
     await assertSucceeds(setDoc(doc(admin, 'tavoli', 'x'), { a: 1 }))
   })
