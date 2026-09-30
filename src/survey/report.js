@@ -1,11 +1,28 @@
 // Dati del report personale con benchmark (da salvare in PDF e inviare a mano).
 // Modulo puro, coperto da report.test.js.
-import { medie } from './risultati.js'
+import { medie, millisecondi } from './risultati.js'
 import { arrotonda, forzeEAttenzioni, livello } from './scoring.js'
 
 // Sotto questa soglia il settore non si mostra: la media sarebbe poco significativa e, con
 // pochissime risposte, permetterebbe di ricavare i punteggi degli altri partecipanti.
 export const MIN_RISPOSTE_SETTORE_REPORT = 5
+
+// Il numero di risposte si scrive nel report solo quando il campione è ampio (strettamente
+// oltre queste soglie); sotto si descrive il campione solo per periodo, in forma anonima.
+export const SOGLIA_NUMERO_TOTALE = 100
+export const SOGLIA_NUMERO_SETTORE = 20
+
+// "nel 2026" oppure "tra il 2025 e il 2026", dalle date delle risposte del campione.
+export function periodoCampione(risposte) {
+  const anni = risposte
+    .map((r) => millisecondi(r.creato_at))
+    .filter((t) => t !== null)
+    .map((t) => new Date(t).getFullYear())
+  if (anni.length === 0) return ''
+  const primo = Math.min(...anni)
+  const ultimo = Math.max(...anni)
+  return primo === ultimo ? `nel ${primo}` : `tra il ${primo} e il ${ultimo}`
+}
 
 // `risposte` e `risposta` sono nel formato di preparaRisposte (con valida e punteggi).
 // Il confronto usa tutte le risposte valide della stessa campagna della persona (lei compresa),
@@ -20,10 +37,12 @@ export function datiReport(risposta, risposte) {
     punteggi: risposta.punteggi,
     livello: livello(risposta.punteggi.totale),
     ...forzeEAttenzioni(risposta.punteggi),
-    tutte: { n: valide.length, medie: medie(valide) },
+    periodo: periodoCampione(valide),
+    tutte: { n: valide.length, mostraNumero: valide.length > SOGLIA_NUMERO_TOTALE, medie: medie(valide) },
     settore: {
       nome: nomeSettore,
       n: delSettore.length,
+      mostraNumero: delSettore.length > SOGLIA_NUMERO_SETTORE,
       medie: settoreMostrato ? medie(delSettore) : null,
     },
   }

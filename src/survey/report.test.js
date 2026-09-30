@@ -1,6 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MIN_RISPOSTE_SETTORE_REPORT, datiReport, elencoInvii, nomeFileReport, nomiUnivoci, scarto } from './report.js'
+import {
+  MIN_RISPOSTE_SETTORE_REPORT,
+  SOGLIA_NUMERO_SETTORE,
+  SOGLIA_NUMERO_TOTALE,
+  datiReport,
+  periodoCampione, elencoInvii, nomeFileReport, nomiUnivoci, scarto } from './report.js'
 import { preparaRisposte } from './risultati.js'
 import { tuttiIdDomande } from './scoring.js'
 
@@ -86,4 +91,24 @@ test('il confronto usa solo la campagna della persona', () => {
   const dati = datiReport(lista[0], lista)
   assert.equal(dati.tutte.n, MIN_RISPOSTE_SETTORE_REPORT)
   assert.equal(dati.tutte.medie.totale, 100)
+})
+
+test('numeri del campione mostrati solo oltre le soglie', () => {
+  const piccolo = preparaRisposte(gruppo('Altro', SOGLIA_NUMERO_SETTORE, 3, 'a'))
+  const dPiccolo = datiReport(piccolo[0], piccolo)
+  assert.equal(dPiccolo.tutte.mostraNumero, false)
+  assert.equal(dPiccolo.settore.mostraNumero, false)
+  assert.ok(dPiccolo.settore.medie)
+
+  const grande = preparaRisposte(gruppo('Altro', SOGLIA_NUMERO_TOTALE + 1, 3, 'b'))
+  const dGrande = datiReport(grande[0], grande)
+  assert.equal(dGrande.tutte.mostraNumero, true)
+  assert.equal(dGrande.settore.mostraNumero, true)
+})
+
+test('periodo del campione per anno', () => {
+  const alle = (t) => ({ creato_at: t })
+  assert.equal(periodoCampione([alle('2026-09-29T10:00:00'), alle('2026-10-01T10:00:00')]), 'nel 2026')
+  assert.equal(periodoCampione([alle('2025-05-01T10:00:00'), alle('2026-09-29T10:00:00')]), 'tra il 2025 e il 2026')
+  assert.equal(periodoCampione([alle(null)]), '')
 })

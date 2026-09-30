@@ -1,7 +1,7 @@
 import { DIMENSIONI } from './content'
 import { TITOLO_BLOCCO_AVANTI, TITOLO_BLOCCO_MARGINE, frase } from './frasi'
 import { LIVELLI, arrotonda, livello } from './scoring'
-import { MIN_RISPOSTE_SETTORE_REPORT, datiReport, scarto } from './report'
+import { datiReport, scarto } from './report'
 import Radar from './Radar'
 
 // Report personale con benchmark, impaginato in due fogli A4 (schermo, stampa e PDF).
@@ -11,6 +11,25 @@ const DIMENSIONE_PER_ID = Object.fromEntries(DIMENSIONI.map((d) => [d.id, d]))
 const ASSI = DIMENSIONI.map((d) => ({ id: d.id, etichetta: d.breve }))
 
 const pct = (v) => (v == null ? '–' : `${arrotonda(v)}%`)
+
+function fraseCampione(dati) {
+  const quando = dati.periodo ? ` raccolte ${dati.periodo}` : ''
+  const quante = dati.tutte.mostraNumero ? `sulle ${dati.tutte.n} risposte complete` : 'sulle risposte complete'
+  const base = `Il confronto è calcolato ${quante}${quando}, compresa la tua, e riportato solo in forma aggregata e anonima.`
+  const s = dati.settore
+  if (!dati.settore.medie) {
+    return `${base} Per il settore “${s.nome}” le risposte raccolte finora non bastano ancora per un confronto significativo e rispettoso della riservatezza degli altri partecipanti: per questo il confronto è con tutte le aziende.`
+  }
+  return s.mostraNumero
+    ? `${base} La media del settore “${s.nome}” si basa su ${s.n} risposte.`
+    : `${base} La media del settore “${s.nome}” considera le risposte dello stesso settore raccolte nello stesso periodo.`
+}
+
+// Il numero di risposte si mostra solo sopra le soglie di report.js, altrimenti il periodo.
+function notaCampione(gruppo, periodo) {
+  if (gruppo.mostraNumero) return `${gruppo.n} risposte`
+  return periodo ? `risposte raccolte ${periodo}` : ''
+}
 
 function Scarto({ valore }) {
   if (valore == null) return '–'
@@ -84,7 +103,7 @@ function FogliReport({ risposta, risposte }) {
               {conSettore ? (
                 <>
                   <span className="report-tessera__valore">{pct(dati.settore.medie.totale)}</span>
-                  <span className="report-tessera__nota">{dati.settore.n} risposte</span>
+                  <span className="report-tessera__nota">{notaCampione(dati.settore, dati.periodo)}</span>
                 </>
               ) : (
                 <>
@@ -96,7 +115,7 @@ function FogliReport({ risposta, risposte }) {
             <div className="report-tessera">
               <span className="report-tessera__titolo">Media di tutte le aziende</span>
               <span className="report-tessera__valore">{pct(dati.tutte.medie?.totale)}</span>
-              <span className="report-tessera__nota">{dati.tutte.n} risposte</span>
+              <span className="report-tessera__nota">{notaCampione(dati.tutte, dati.periodo)}</span>
             </div>
           </section>
 
@@ -201,11 +220,7 @@ function FogliReport({ risposta, risposte }) {
               {LIVELLI.map((l, i) => `${l.nome} ${i === 0 ? 0 : LIVELLI[i - 1].max + 1}-${l.max}%`).join(' · ')}.
             </p>
             <p>
-              Il confronto è calcolato sulle {dati.tutte.n} risposte complete raccolte all’evento, compresa la
-              tua, e riportato solo in forma aggregata.
-              {conSettore
-                ? ` La media del settore “${dati.settore.nome}” si basa su ${dati.settore.n} risposte.`
-                : ` Per il settore “${dati.settore.nome}” sono arrivate ${dati.settore.n} risposte: sotto le ${MIN_RISPOSTE_SETTORE_REPORT} non mostriamo la media di settore, perché sarebbe poco significativa e non tutelerebbe la riservatezza degli altri partecipanti.`}
+              {fraseCampione(dati)}
             </p>
             <p>
               Il risultato riflette la percezione di chi ha compilato il questionario: è un punto di partenza per il
