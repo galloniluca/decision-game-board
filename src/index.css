@@ -1852,3 +1852,51 @@ label {
   margin: 0;
   box-shadow: none;
 }
+
+/* Filtri, nota sui download e selezione delle righe nella pagina risultati. */
+.risultati-filtri__testa {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.risultati-filtri__griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.25rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.risultati-filtri__rapidi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.risultati-nota {
+  margin: -0.5rem 0 1.25rem;
+  font-size: 0.85rem;
+}
+
+.risultati-selezione {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.risultati-spunta {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.risultati-spunta input {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: var(--accent-strong);
+}

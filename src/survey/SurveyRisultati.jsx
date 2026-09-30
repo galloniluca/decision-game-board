@@ -3,8 +3,21 @@ import Topbar from '../components/Topbar'
 import NavGioco from '../components/NavGioco'
 import { CAMPAGNA, DIMENSIONI, DIMENSIONI_AZIENDA, SETTORI } from './content'
 import { arrotonda, livello } from './scoring'
-import { benchmarkPer, conteggioPer, creaCsv, creaJson, medie, preparaRisposte } from './risultati'
-import { accedi, esci, osservaAccesso, osservaRisposte } from './firebaseRisultati'
+import {
+  FILTRI_VUOTI,
+  benchmarkPer,
+  conteggioPer,
+  creaCsv,
+  creaJson,
+  elencoCampagne,
+  filtraRisposte,
+  filtriAttivi,
+  medie,
+  millisecondi,
+  periodoRapido,
+  preparaRisposte,
+} from './risultati'
+import { accedi, eliminaRisposte, esci, osservaAccesso, osservaRisposte } from './firebaseRisultati'
 import Radar from './Radar'
 import ReportPersonale from './ReportPersonale'
 import { creaZipReport, scaricaBlob } from './pdfReport'
@@ -177,12 +190,107 @@ function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto, onApri
   )
 }
 
-function Contenuto({ risposte, onApriReport }) {
+function Filtri({ filtri, onCambia, campagne, trovate, totali }) {
+  const imposta = (campo) => (e) => onCambia({ ...filtri, [campo]: e.target.value })
+  return (
+    <section className="card risultati-filtri">
+      <div className="risultati-filtri__testa">
+        <h2>Filtri</h2>
+        <span className="status-muted">
+          {trovate} di {totali} risposte
+        </span>
+      </div>
+      <div className="risultati-filtri__griglia">
+        <div className="survey-campo">
+          <label htmlFor="filtro-campagna">Campagna</label>
+          <select id="filtro-campagna" className="input" value={filtri.campagna} onChange={imposta('campagna')}>
+            <option value="">Tutte</option>
+            {campagne.map((c) => (
+              <option key={c} value={c}>
+                {c || '(senza campagna)'}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="survey-campo">
+          <label htmlFor="filtro-da">Dal</label>
+          <input id="filtro-da" className="input" type="date" value={filtri.da} onChange={imposta('da')} />
+        </div>
+        <div className="survey-campo">
+          <label htmlFor="filtro-a">Al</label>
+          <input id="filtro-a" className="input" type="date" value={filtri.a} onChange={imposta('a')} />
+        </div>
+        <div className="survey-campo">
+          <label htmlFor="filtro-settore">Settore</label>
+          <select id="filtro-settore" className="input" value={filtri.settore} onChange={imposta('settore')}>
+            <option value="">Tutti</option>
+            {SETTORI.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="survey-campo">
+          <label htmlFor="filtro-dimensione">Dimensione aziendale</label>
+          <select id="filtro-dimensione" className="input" value={filtri.dimensione} onChange={imposta('dimensione')}>
+            <option value="">Tutte</option>
+            {DIMENSIONI_AZIENDA.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="survey-campo">
+          <label htmlFor="filtro-testo">Cerca</label>
+          <input
+            id="filtro-testo"
+            className="input"
+            type="search"
+            placeholder="nome, azienda, email, ruolo"
+            value={filtri.testo}
+            onChange={imposta('testo')}
+          />
+        </div>
+      </div>
+      <div className="risultati-filtri__rapidi">
+        <span className="status-muted">Periodo:</span>
+        <button type="button" className="btn btn-sm" onClick={() => onCambia({ ...filtri, ...periodoRapido(30) })}>
+          Ultimi 30 giorni
+        </button>
+        <button type="button" className="btn btn-sm" onClick={() => onCambia({ ...filtri, ...periodoRapido(365) })}>
+          Ultimo anno
+        </button>
+        <button type="button" className="btn btn-sm" onClick={() => onCambia({ ...filtri, da: '', a: '' })}>
+          Sempre
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={!filtriAttivi(filtri)}
+          onClick={() => onCambia(FILTRI_VUOTI)}
+        >
+          Azzera filtri
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function Contenuto({ tutte, onApriReport }) {
+  const campagne = useMemo(() => elencoCampagne(tutte), [tutte])
+  const [filtri, setFiltri] = useState(() => ({
+    ...FILTRI_VUOTI,
+    campagna: tutte.some((r) => r.campagna === CAMPAGNA) ? CAMPAGNA : '',
+  }))
   const [settoreScelto, setSettoreScelto] = useState('')
-  const [filtro, setFiltro] = useState('')
   const [aperto, setAperto] = useState(null)
   const [statoZip, setStatoZip] = useState(null)
+  const [selezionati, setSelezionati] = useState(() => new Set())
+  const [eliminazione, setEliminazione] = useState(null)
 
+  const risposte = filtraRisposte(tutte, filtri)
   const mediaTutte = medie(risposte)
   const perSettore = benchmarkPer(risposte, 'settore', SETTORI)
   const perDimensione = benchmarkPer(risposte, 'dimensione', DIMENSIONI_AZIENDA)
@@ -192,28 +300,63 @@ function Contenuto({ risposte, onApriReport }) {
   const contatti = risposte.filter((r) => r.consenso?.contatto_bpr).length
   const incomplete = risposte.filter((r) => !r.valida).length
 
-  const ordinate = [...risposte].sort((x, y) => {
-    const tx = x.creato_at?.toMillis?.() ?? 0
-    const ty = y.creato_at?.toMillis?.() ?? 0
-    return ty - tx
-  })
-  const testo = filtro.trim().toLowerCase()
-  const visibili = testo
-    ? ordinate.filter((r) =>
-        ['nome', 'azienda', 'email', 'settore', 'ruolo'].some((k) =>
-          String(r.anagrafica?.[k] ?? '').toLowerCase().includes(testo)
-        )
-      )
-    : ordinate
+  const visibili = [...risposte].sort(
+    (x, y) => (millisecondi(y.creato_at) ?? 0) - (millisecondi(x.creato_at) ?? 0)
+  )
+  const valide = visibili.filter((r) => r.valida)
+  // Si cancellano solo le righe selezionate ancora visibili con i filtri attuali.
+  const daEliminare = visibili.filter((r) => selezionati.has(r.id))
+  const tutteSelezionate = visibili.length > 0 && daEliminare.length === visibili.length
 
   const oggi = new Date().toISOString().slice(0, 10)
-  const valide = ordinate.filter((r) => r.valida)
+  const nomeBase = `survey_${filtri.campagna || 'tutte'}${filtriAttivi({ ...filtri, campagna: '' }) ? '_filtrato' : ''}_${oggi}`
+
+  function cambiaFiltri(nuovi) {
+    setFiltri(nuovi)
+    setAperto(null)
+  }
+
+  function selezionaTutte() {
+    setSelezionati(tutteSelezionate ? new Set() : new Set(visibili.map((r) => r.id)))
+  }
+
+  function commuta(id) {
+    setSelezionati((prima) => {
+      const dopo = new Set(prima)
+      if (dopo.has(id)) dopo.delete(id)
+      else dopo.add(id)
+      return dopo
+    })
+  }
+
+  async function eliminaSelezionate() {
+    const nomi = daEliminare.map((r) => `- ${r.anagrafica?.nome ?? '?'} (${r.anagrafica?.azienda ?? ''})`)
+    const elenco = nomi.length > 12 ? [...nomi.slice(0, 12), `... e altre ${nomi.length - 12}`] : nomi
+    const ok = window.confirm(
+      `Eliminare DEFINITIVAMENTE ${daEliminare.length} risposte?\n\n${elenco.join('\n')}\n\nL'operazione non si può annullare.`
+    )
+    if (!ok) return
+    setEliminazione({ inCorso: true })
+    try {
+      await eliminaRisposte(daEliminare.map((r) => r.id))
+      setSelezionati(new Set())
+      setAperto(null)
+      setEliminazione(null)
+    } catch (err) {
+      setEliminazione({
+        errore:
+          err?.code === 'permission-denied'
+            ? 'Firestore non permette la cancellazione: pubblica dalla console la versione aggiornata di firestore.rules.'
+            : err.message,
+      })
+    }
+  }
 
   async function scaricaTuttiReport() {
     setStatoZip({ fatti: 0, totale: valide.length })
     try {
-      const zip = await creaZipReport(valide, risposte, (fatti, totale) => setStatoZip({ fatti, totale }))
-      scaricaBlob(`report_survey_${CAMPAGNA}_${oggi}.zip`, zip)
+      const zip = await creaZipReport(valide, tutte, (fatti, totale) => setStatoZip({ fatti, totale }))
+      scaricaBlob(`report_${nomeBase}.zip`, zip)
       setStatoZip(null)
     } catch (err) {
       setStatoZip({ errore: err.message })
@@ -222,19 +365,27 @@ function Contenuto({ risposte, onApriReport }) {
 
   return (
     <>
+      <Filtri
+        filtri={filtri}
+        onCambia={cambiaFiltri}
+        campagne={campagne}
+        trovate={risposte.length}
+        totali={tutte.length}
+      />
+
       <div className="risultati-azioni">
         <button
           className="btn"
-          disabled={risposte.length === 0}
-          onClick={() => scarica(`survey_${CAMPAGNA}_${oggi}.csv`, creaCsv(ordinate), 'text/csv;charset=utf-8')}
+          disabled={visibili.length === 0}
+          onClick={() => scarica(`${nomeBase}.csv`, creaCsv(visibili), 'text/csv;charset=utf-8')}
         >
-          Scarica CSV (Excel)
+          Scarica CSV (Excel) ({visibili.length})
         </button>
         <button
           className="btn"
-          disabled={risposte.length === 0}
+          disabled={visibili.length === 0}
           onClick={() =>
-            scarica(`survey_${CAMPAGNA}_${oggi}.json`, creaJson(ordinate, CAMPAGNA), 'application/json')
+            scarica(`${nomeBase}.json`, creaJson(visibili, filtri.campagna || 'tutte'), 'application/json')
           }
         >
           Scarica JSON
@@ -244,7 +395,7 @@ function Contenuto({ risposte, onApriReport }) {
           disabled={valide.length === 0 || (statoZip !== null && !statoZip.errore)}
           onClick={scaricaTuttiReport}
         >
-          Scarica tutti i report PDF ({valide.length})
+          Scarica i report PDF ({valide.length})
         </button>
         {statoZip && !statoZip.errore && (
           <span className="status-muted">
@@ -253,6 +404,10 @@ function Contenuto({ risposte, onApriReport }) {
         )}
         {statoZip?.errore && <span className="status-error">Errore: {statoZip.errore}</span>}
       </div>
+      <p className="status-muted risultati-nota">
+        I download contengono solo le risposte che corrispondono ai filtri. Nei report PDF il confronto usa
+        sempre tutte le risposte della campagna della persona, così il report non cambia con i filtri.
+      </p>
 
       <div className="risultati-kpi">
         <div className="card risultati-kpi__tile">
@@ -273,7 +428,7 @@ function Contenuto({ risposte, onApriReport }) {
 
       {risposte.length === 0 ? (
         <div className="card">
-          <p className="status-muted">Nessuna risposta per la campagna {CAMPAGNA}.</p>
+          <p className="status-muted">Nessuna risposta corrisponde ai filtri.</p>
         </div>
       ) : (
         <>
@@ -378,21 +533,33 @@ function Contenuto({ risposte, onApriReport }) {
           </div>
 
           <section className="card">
-            <h2>Partecipanti</h2>
-            <div className="survey-campo risultati-filtro">
-              <label htmlFor="cerca-partecipante">Cerca (nome, azienda, email, settore, ruolo)</label>
-              <input
-                id="cerca-partecipante"
-                className="input"
-                type="search"
-                value={filtro}
-                onChange={(e) => setFiltro(e.target.value)}
-              />
+            <h2>Partecipanti ({visibili.length})</h2>
+            <div className="risultati-selezione">
+              <span className="status-muted">
+                Seleziona le risposte di prova da eliminare. Selezionate: {daEliminare.length}
+              </span>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                disabled={daEliminare.length === 0 || eliminazione?.inCorso}
+                onClick={eliminaSelezionate}
+              >
+                {eliminazione?.inCorso ? 'Eliminazione...' : `Elimina selezionate (${daEliminare.length})`}
+              </button>
+              {eliminazione?.errore && <span className="status-error">{eliminazione.errore}</span>}
             </div>
             <div className="risultati-scroll">
               <table className="table risultati-partecipanti">
                 <thead>
                   <tr>
+                    <th className="risultati-spunta">
+                      <input
+                        type="checkbox"
+                        aria-label="Seleziona tutte le risposte visibili"
+                        checked={tutteSelezionate}
+                        onChange={selezionaTutte}
+                      />
+                    </th>
                     <th>Data</th>
                     <th>Nome</th>
                     <th>Azienda</th>
@@ -421,6 +588,14 @@ function Contenuto({ risposte, onApriReport }) {
                           }}
                           aria-expanded={espanso}
                         >
+                          <td className="risultati-spunta" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              aria-label={`Seleziona ${r.anagrafica?.nome ?? 'risposta'}`}
+                              checked={selezionati.has(r.id)}
+                              onChange={() => commuta(r.id)}
+                            />
+                          </td>
                           <td>{formattaData(r.creato_at)}</td>
                           <td>{r.anagrafica?.nome}</td>
                           <td>{r.anagrafica?.azienda}</td>
@@ -431,7 +606,7 @@ function Contenuto({ risposte, onApriReport }) {
                         </tr>
                         {espanso && (
                           <tr className="risultati-riga-dettaglio">
-                            <td colSpan={7}>
+                            <td colSpan={8}>
                               <DettaglioPartecipante
                                 risposta={r}
                                 mediaConfronto={confronto ? confronto.medie : mediaTutte}
@@ -506,7 +681,6 @@ function SurveyRisultati() {
     if (!utente) return undefined
     setErroreLettura(null)
     return osservaRisposte(
-      CAMPAGNA,
       (dati) => setDocumenti(dati),
       (err) => setErroreLettura(messaggioLettura(err))
     )
@@ -522,7 +696,7 @@ function SurveyRisultati() {
   } else if (!documenti) {
     corpo = <p className="status-muted">Caricamento risposte...</p>
   } else {
-    corpo = <Contenuto risposte={risposte} onApriReport={apriReport} />
+    corpo = <Contenuto tutte={risposte} onApriReport={apriReport} />
   }
 
   return (
@@ -537,7 +711,7 @@ function SurveyRisultati() {
           <div className="risultati-intestazione">
             <div>
               <h1>Risultati survey</h1>
-              <p className="status-muted">Campagna {CAMPAGNA} · aggiornamento in tempo reale</p>
+              <p className="status-muted">Aggiornamento in tempo reale</p>
             </div>
             {utente && (
               <button

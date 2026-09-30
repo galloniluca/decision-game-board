@@ -1,6 +1,19 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { benchmarkPer, conteggioPer, creaCsv, creaJson, medie, preparaRisposte, COLONNE_CSV } from './risultati.js'
+import {
+  benchmarkPer,
+  conteggioPer,
+  creaCsv,
+  creaJson,
+  elencoCampagne,
+  filtraRisposte,
+  filtriAttivi,
+  FILTRI_VUOTI,
+  medie,
+  periodoRapido,
+  preparaRisposte,
+  COLONNE_CSV,
+} from './risultati.js'
 import { tuttiIdDomande } from './scoring.js'
 
 const tutte = (v) => Object.fromEntries(tuttiIdDomande().map((id) => [id, v]))
@@ -73,4 +86,43 @@ test('JSON: punteggi ricalcolati e date ISO', () => {
   assert.equal(dati.documenti[0].punteggi_ricalcolati.totale, 100)
   assert.equal(dati.documenti[0].creato_at, '2026-09-29T10:00:00.000Z')
   assert.equal('valida' in dati.documenti[0], false)
+})
+
+test('filtraRisposte: campagna, settore, dimensione e testo', () => {
+  const lista = [
+    risposta('a', 'Altro', 3, { campagna: 'c1' }),
+    risposta('b', 'Arredo e legno', 3, { campagna: 'c1', anagrafica: { nome: 'Bruno Verdi', azienda: 'Legni Spa', settore: 'Arredo e legno', dimensione: '51-250 dipendenti' } }),
+    risposta('c', 'Altro', 3, { campagna: 'c2' }),
+  ]
+  const ids = (f) => filtraRisposte(lista, { ...FILTRI_VUOTI, ...f }).map((r) => r.id)
+  assert.deepEqual(ids({}), ['a', 'b', 'c'])
+  assert.deepEqual(ids({ campagna: 'c1' }), ['a', 'b'])
+  assert.deepEqual(ids({ settore: 'Altro' }), ['a', 'c'])
+  assert.deepEqual(ids({ dimensione: '51-250 dipendenti' }), ['b'])
+  assert.deepEqual(ids({ testo: '  legni ' }), ['b'])
+})
+
+test('filtraRisposte: periodo con estremi inclusi, in ora locale', () => {
+  const alle = (id, ...data) => risposta(id, 'Altro', 3, { creato_at: new Date(...data).toISOString() })
+  const lista = [alle('prima', 2026, 8, 28, 23, 59), alle('inizio', 2026, 8, 29, 0, 0), alle('fine', 2026, 8, 30, 23, 59), alle('dopo', 2026, 9, 1, 0, 0), { ...alle('senza', 2026, 8, 29), creato_at: null }]
+  const ids = (f) => filtraRisposte(lista, { ...FILTRI_VUOTI, ...f }).map((r) => r.id)
+  assert.deepEqual(ids({ da: '2026-09-29', a: '2026-09-30' }), ['inizio', 'fine'])
+  assert.deepEqual(ids({ da: '2026-09-30' }), ['fine', 'dopo'])
+  assert.deepEqual(ids({}).length, 5)
+})
+
+test('periodoRapido e filtriAttivi', () => {
+  assert.deepEqual(periodoRapido(365, new Date(2026, 8, 30)), { da: '2025-10-01', a: '2026-09-30' })
+  assert.deepEqual(periodoRapido(1, new Date(2026, 8, 30)), { da: '2026-09-30', a: '2026-09-30' })
+  assert.equal(filtriAttivi(FILTRI_VUOTI), false)
+  assert.equal(filtriAttivi({ ...FILTRI_VUOTI, settore: 'Altro' }), true)
+})
+
+test('elencoCampagne dalla più recente', () => {
+  const lista = [
+    risposta('a', 'Altro', 3, { campagna: 'vecchia', creato_at: '2025-05-01T10:00:00Z' }),
+    risposta('b', 'Altro', 3, { campagna: 'nuova', creato_at: '2026-09-29T10:00:00Z' }),
+    risposta('c', 'Altro', 3, { campagna: 'vecchia', creato_at: '2025-05-02T10:00:00Z' }),
+  ]
+  assert.deepEqual(elencoCampagne(lista), ['nuova', 'vecchia'])
 })

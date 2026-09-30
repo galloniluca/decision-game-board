@@ -76,3 +76,14 @@ test('elenco invii con email e file', () => {
   ])
   assert.equal(csv, '﻿nome;azienda;email;contatto_bpr;file\r\nAnna;"X;Y";a@x.it;sì;f.pdf\r\n')
 })
+
+test('il confronto usa solo la campagna della persona', () => {
+  const conCampagna = (lista, campagna) => lista.map((r) => ({ ...r, campagna }))
+  const lista = preparaRisposte([
+    ...conCampagna(gruppo('Altro', MIN_RISPOSTE_SETTORE_REPORT, 5, 'a'), 'c1'),
+    ...conCampagna(gruppo('Altro', 10, 1, 'b'), 'c2'),
+  ])
+  const dati = datiReport(lista[0], lista)
+  assert.equal(dati.tutte.n, MIN_RISPOSTE_SETTORE_REPORT)
+  assert.equal(dati.tutte.medie.totale, 100)
+})

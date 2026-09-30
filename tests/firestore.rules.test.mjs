@@ -176,10 +176,18 @@ describe('survey_risposte: utente riservato della pagina risultati', () => {
     )
   })
 
-  test('non può modificare né cancellare', async () => {
+  test('non può modificare', async () => {
     const rif = doc(admin, 'survey_risposte', 'esistente')
     await assertFails(updateDoc(rif, { campagna: 'y' }))
-    await assertFails(deleteDoc(rif))
+    await assertFails(setDoc(rif, { campagna: 'y' }))
+  })
+
+  test('può cancellare (risposte di prova, richieste di cancellazione)', async () => {
+    await assertSucceeds(deleteDoc(doc(admin, 'survey_risposte', 'esistente')))
+  })
+
+  test('un altro utente autenticato non può cancellare', async () => {
+    await assertFails(deleteDoc(doc(altro, 'survey_risposte', 'esistente')))
   })
 
   test('un altro utente autenticato non può leggere', async () => {

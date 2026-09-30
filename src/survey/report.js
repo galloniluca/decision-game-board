@@ -8,9 +8,10 @@ import { arrotonda, forzeEAttenzioni, livello } from './scoring.js'
 export const MIN_RISPOSTE_SETTORE_REPORT = 5
 
 // `risposte` e `risposta` sono nel formato di preparaRisposte (con valida e punteggi).
-// Le medie includono anche la persona stessa, come ogni altra risposta valida.
+// Il confronto usa tutte le risposte valide della stessa campagna della persona (lei compresa),
+// indipendentemente dai filtri attivi nella pagina: il report di una persona non cambia.
 export function datiReport(risposta, risposte) {
-  const valide = risposte.filter((r) => r.valida)
+  const valide = risposte.filter((r) => r.valida && r.campagna === risposta.campagna)
   const nomeSettore = risposta.anagrafica?.settore ?? ''
   const delSettore = valide.filter((r) => r.anagrafica?.settore === nomeSettore)
   const settoreMostrato = delSettore.length >= MIN_RISPOSTE_SETTORE_REPORT

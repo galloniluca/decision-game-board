@@ -115,3 +115,69 @@ export function creaJson(risposte, campagna) {
     2
   )
 }
+
+// ---- Filtri della pagina riservata (campagna, periodo, settore, dimensione, testo) ----
+
+export const FILTRI_VUOTI = { campagna: '', da: '', a: '', settore: '', dimensione: '', testo: '' }
+
+export function millisecondi(valore) {
+  if (!valore) return null
+  if (typeof valore.toMillis === 'function') return valore.toMillis()
+  const t = new Date(valore).getTime()
+  return Number.isNaN(t) ? null : t
+}
+
+// 'AAAA-MM-GG' in ora locale: inizio del giorno (fine = inizio del giorno dopo).
+function inizioGiorno(testo) {
+  const [a, m, g] = String(testo).split('-').map(Number)
+  if (!a || !m || !g) return null
+  return new Date(a, m - 1, g).getTime()
+}
+
+export function dataInput(d) {
+  const due = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`
+}
+
+// Scorciatoie di periodo: restituiscono le date da/a da mettere nei filtri.
+export function periodoRapido(giorni, oggi = new Date()) {
+  const da = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() - giorni + 1)
+  return { da: dataInput(da), a: dataInput(oggi) }
+}
+
+export function filtriAttivi(filtri) {
+  return Object.values(filtri).some((v) => String(v ?? '').trim() !== '')
+}
+
+// Le risposte senza data (timestamp non ancora arrivato) passano solo se il periodo è libero.
+export function filtraRisposte(risposte, filtri) {
+  const da = filtri.da ? inizioGiorno(filtri.da) : null
+  const aInizio = filtri.a ? inizioGiorno(filtri.a) : null
+  const a = aInizio === null ? null : aInizio + 24 * 60 * 60 * 1000
+  const testo = String(filtri.testo ?? '').trim().toLowerCase()
+  return risposte.filter((r) => {
+    const an = r.anagrafica ?? {}
+    if (filtri.campagna && r.campagna !== filtri.campagna) return false
+    if (filtri.settore && an.settore !== filtri.settore) return false
+    if (filtri.dimensione && an.dimensione !== filtri.dimensione) return false
+    if (da !== null || a !== null) {
+      const t = millisecondi(r.creato_at)
+      if (t === null || (da !== null && t < da) || (a !== null && t >= a)) return false
+    }
+    if (testo) {
+      const campi = ['nome', 'azienda', 'email', 'settore', 'ruolo'].map((k) => String(an[k] ?? '').toLowerCase())
+      if (!campi.some((c) => c.includes(testo))) return false
+    }
+    return true
+  })
+}
+
+// Campagne presenti nei dati, dalla più recente.
+export function elencoCampagne(risposte) {
+  const ultima = new Map()
+  for (const r of risposte) {
+    const c = r.campagna ?? ''
+    ultima.set(c, Math.max(ultima.get(c) ?? 0, millisecondi(r.creato_at) ?? 0))
+  }
+  return [...ultima].sort((x, y) => y[1] - x[1]).map(([c]) => c)
+}

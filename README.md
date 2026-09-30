@@ -605,6 +605,14 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
     apre il dettaglio: dati, punteggio e fascia per dimensione, radar del partecipante contro la
     media del suo settore (o di tutte, se è l'unico del settore)
   - download **CSV** (separatore `;`, si apre direttamente con Excel in italiano) e **JSON**
+  - **filtri** per campagna, periodo (date dal/al, scorciatoie "Ultimi 30 giorni", "Ultimo anno"),
+    settore, dimensione aziendale e testo: statistiche, elenco e tutti i download (CSV, JSON, ZIP
+    dei report) contengono solo le risposte filtrate. La pagina legge tutte le campagne
+  - **report personale PDF** di ogni partecipante e **ZIP con tutti i report** filtrati più
+    `elenco-invii.csv` (nome, azienda, email, file). Nei report il confronto usa sempre tutte le
+    risposte della campagna della persona; la media di settore compare solo con almeno 5 risposte
+  - **eliminazione** delle risposte selezionate (prove, richieste di cancellazione), con conferma:
+    è definitiva. Richiede la versione di `firestore.rules` che permette `delete` all'utente riservato
 - I punteggi sono sempre **ricalcolati dalle risposte** (`src/survey/risultati.js`, con test)
 - I colori delle due serie dei radar di confronto sono verificati per il daltonismo; la seconda
   serie ha anche marcatori quadrati e area senza riempimento, più legenda
@@ -628,8 +636,8 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
 
 ### Test
 
-- Automatici: `npm test` (29 test, compresi aggregazioni ed export CSV/JSON) e
-  `npm run test:rules` (41 test: l'utente riservato può leggere ma non modificare/cancellare; un
+- Automatici: `npm test` (43 test, compresi aggregazioni, filtri, report ed export CSV/JSON) e
+  `npm run test:rules` (43 test: l'utente riservato può leggere e cancellare ma non modificare; un
   altro utente autenticato, lo stesso indirizzo con accesso Google o un visitatore anonimo non
   possono leggere; il game resta aperto)
 - Verificato in locale sugli emulatori Firestore + Authentication con Chromium headless: un
