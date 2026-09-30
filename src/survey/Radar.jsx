@@ -33,6 +33,7 @@ const limita = (v) => Math.max(0, Math.min(100, v ?? 0))
 // Serie extra: classe CSS per colore; `forma` quadrata per la seconda serie, così le due
 // serie si distinguono anche senza colore.
 function Marcatore({ x, y, forma, className }) {
+  if (forma === 'nessuno') return null
   if (forma === 'quadrato') {
     return <rect className={className} x={x - 4} y={y - 4} width={8} height={8} rx={1.5} />
   }

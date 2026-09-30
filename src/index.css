@@ -1449,3 +1449,406 @@ label {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Report personale survey (A4, da salvare in PDF) ---- */
+
+.report {
+  --r-ink: #1b1d4a;
+  --r-muted: #5b5f86;
+  --r-line: #dcdef0;
+  --r-soft: #f3f4fb;
+  --r-brand: #131660;
+  --r-tu: #5458e6;
+  --r-settore: #0f8a7e;
+  --r-tutte: #8a8fa8;
+  --r-su: #13795b;
+  --r-giu: #c0392b;
+  padding: 0 0 2rem;
+}
+
+.report-barra {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+}
+
+.report-barra__nota {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.report-foglio {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 1.5rem;
+  background: #fff;
+  color: var(--r-ink);
+  box-shadow: var(--shadow);
+  font-size: 10.5pt;
+  line-height: 1.45;
+  color-scheme: light;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.report-testata {
+  display: flex;
+  align-items: center;
+  gap: 8mm;
+  padding: 7mm 16mm;
+  background: var(--r-brand);
+  color: #fff;
+}
+
+.report-testata__logo {
+  height: 11mm;
+  width: auto;
+}
+
+.report-testata__testo {
+  display: flex;
+  flex-direction: column;
+  font-size: 9pt;
+  opacity: 0.92;
+}
+
+.report-testata__testo strong {
+  font-size: 13pt;
+  letter-spacing: 0.01em;
+}
+
+.report-corpo {
+  padding: 7mm 16mm 8mm;
+}
+
+.report-foglio h1 {
+  margin: 0 0 1mm;
+  font-size: 20pt;
+  color: var(--r-ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.report-foglio h2 {
+  margin: 0 0 3mm;
+  font-size: 11pt;
+  color: var(--r-brand);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.report-foglio h3 {
+  margin: 0;
+  font-size: 11pt;
+  color: var(--r-ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.report-foglio p {
+  color: var(--r-ink);
+}
+
+.report-persona p {
+  margin: 0;
+}
+
+.report-muted {
+  color: var(--r-muted);
+}
+
+.report-tessere {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  margin: 5mm 0 5mm;
+}
+
+.report-tessera {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5mm;
+  padding: 3.5mm 4mm;
+  border: 1px solid var(--r-line);
+  border-radius: 3mm;
+  background: var(--r-soft);
+}
+
+.report-tessera--tu {
+  background: var(--r-tu);
+  border-color: var(--r-tu);
+  color: #fff;
+}
+
+.report-tessera__titolo {
+  font-size: 8.5pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.report-tessera__valore {
+  font-size: 24pt;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-tessera__valore--vuoto {
+  color: var(--r-muted);
+}
+
+.report-tessera__nota {
+  font-size: 9pt;
+  font-weight: 600;
+}
+
+.report-sezione {
+  margin-bottom: 5mm;
+}
+
+.report-radar .survey-radar {
+  max-width: 124mm;
+  margin: 0 auto;
+}
+
+.report .survey-radar-griglia polygon,
+.report .survey-radar-griglia line {
+  stroke: var(--r-line);
+}
+
+.report .survey-radar-etichetta {
+  fill: var(--r-ink);
+}
+
+.report .survey-radar-punto {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.report-serie-tu {
+  --serie: var(--r-tu);
+}
+
+.report-serie-settore {
+  --serie: var(--r-settore);
+}
+
+.report-serie-tutte {
+  --serie: var(--r-tutte);
+}
+
+.report-serie-tu .survey-radar-area {
+  fill: rgba(84, 88, 230, 0.16);
+  stroke: var(--serie);
+  stroke-width: 2.5;
+}
+
+.report-serie-settore .survey-radar-area {
+  fill: none;
+  stroke: var(--serie);
+  stroke-width: 2;
+}
+
+.report-serie-tutte .survey-radar-area {
+  fill: none;
+  stroke: var(--serie);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.report-serie-tu .survey-radar-punto,
+.report-serie-settore .survey-radar-punto {
+  fill: var(--serie);
+}
+
+.report-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1mm 6mm;
+  margin-top: 2mm;
+  font-size: 9pt;
+  color: var(--r-muted);
+}
+
+.report-legenda__voce {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5mm;
+}
+
+.report-legenda__segno {
+  width: 3mm;
+  height: 3mm;
+  border-radius: 50%;
+  background: var(--serie);
+}
+
+.report-legenda__segno--quadrato {
+  border-radius: 0.5mm;
+}
+
+.report-legenda__segno--linea {
+  width: 6mm;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-top: 2px dashed var(--serie);
+}
+
+.report-tabella {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+
+.report-tabella th {
+  padding: 1.5mm 2mm;
+  text-align: left;
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--r-muted);
+  border-bottom: 1.5px solid var(--r-ink);
+}
+
+.report-tabella td {
+  padding: 1.3mm 2mm;
+  border-bottom: 1px solid var(--r-line);
+}
+
+.report-tabella__totale td {
+  font-weight: 700;
+  border-bottom: none;
+  border-top: 1.5px solid var(--r-ink);
+}
+
+.report-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.report-forte {
+  font-weight: 700;
+}
+
+.report-scarto {
+  font-weight: 700;
+  color: var(--r-muted);
+}
+
+.report-scarto--su {
+  color: var(--r-su);
+}
+
+.report-scarto--giu {
+  color: var(--r-giu);
+}
+
+.report-lettura {
+  padding: 3.5mm 4mm;
+  margin-bottom: 3mm;
+  border-left: 1.2mm solid var(--r-tu);
+  background: var(--r-soft);
+  border-radius: 0 2mm 2mm 0;
+  break-inside: avoid;
+}
+
+.report-lettura__testa {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1mm 4mm;
+  margin-bottom: 1mm;
+}
+
+.report-lettura__valori {
+  font-weight: 700;
+  font-size: 10pt;
+  white-space: nowrap;
+}
+
+.report-lettura__valori .report-muted {
+  font-weight: 400;
+}
+
+.report-lettura p {
+  margin: 0;
+}
+
+.report-metodo p {
+  margin: 0 0 2mm;
+  font-size: 9.5pt;
+  color: var(--r-muted);
+}
+
+.report-piede {
+  margin-top: 8mm;
+  padding-top: 4mm;
+  border-top: 1px solid var(--r-line);
+  font-size: 9.5pt;
+}
+
+/* Su schermi stretti il foglio A4 scorre in orizzontale invece di deformarsi. */
+@media screen and (max-width: 840px) {
+  .report {
+    overflow-x: auto;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .report {
+    padding: 0;
+  }
+
+  .report-barra {
+    display: none;
+  }
+
+  .report-foglio {
+    margin: 0;
+    box-shadow: none;
+    break-after: page;
+  }
+
+  .report-foglio:last-child {
+    break-after: auto;
+  }
+}
+
+/* Banco fuori schermo per generare i PDF: un foglio A4 esatto, senza ombra né margini. */
+.report--cattura {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 210mm;
+  padding: 0;
+  pointer-events: none;
+}
+
+.report--cattura .report-foglio {
+  margin: 0;
+  box-shadow: none;
+}

@@ -6,6 +6,8 @@ import { arrotonda, livello } from './scoring'
 import { benchmarkPer, conteggioPer, creaCsv, creaJson, medie, preparaRisposte } from './risultati'
 import { accedi, esci, osservaAccesso, osservaRisposte } from './firebaseRisultati'
 import Radar from './Radar'
+import ReportPersonale from './ReportPersonale'
+import { creaZipReport, scaricaBlob } from './pdfReport'
 
 // Pagina riservata: chi ha risposto, risultati di ciascuno, benchmark e download.
 // Si apre con il link riservato …/survey-risultati#chiave=<password> oppure inserendo la
@@ -110,7 +112,7 @@ function Accesso({ onAccedi, errore, inCorso }) {
   )
 }
 
-function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto }) {
+function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto, onApriReport }) {
   const a = risposta.anagrafica ?? {}
   return (
     <div className="risultati-dettaglio">
@@ -146,6 +148,11 @@ function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto }) {
         ) : (
           <p className="status-error">Risposte incomplete: esclusa dai calcoli.</p>
         )}
+        {risposta.valida && (
+          <button type="button" className="btn btn-primary btn-sm" onClick={onApriReport}>
+            Report personale (PDF)
+          </button>
+        )}
       </div>
       {risposta.valida && (
         <div className="risultati-dettaglio__radar">
@@ -170,11 +177,11 @@ function DettaglioPartecipante({ risposta, mediaConfronto, nomeConfronto }) {
   )
 }
 
-function Contenuto({ documenti }) {
-  const risposte = useMemo(() => preparaRisposte(documenti), [documenti])
+function Contenuto({ risposte, onApriReport }) {
   const [settoreScelto, setSettoreScelto] = useState('')
   const [filtro, setFiltro] = useState('')
   const [aperto, setAperto] = useState(null)
+  const [statoZip, setStatoZip] = useState(null)
 
   const mediaTutte = medie(risposte)
   const perSettore = benchmarkPer(risposte, 'settore', SETTORI)
@@ -200,6 +207,18 @@ function Contenuto({ documenti }) {
     : ordinate
 
   const oggi = new Date().toISOString().slice(0, 10)
+  const valide = ordinate.filter((r) => r.valida)
+
+  async function scaricaTuttiReport() {
+    setStatoZip({ fatti: 0, totale: valide.length })
+    try {
+      const zip = await creaZipReport(valide, risposte, (fatti, totale) => setStatoZip({ fatti, totale }))
+      scaricaBlob(`report_survey_${CAMPAGNA}_${oggi}.zip`, zip)
+      setStatoZip(null)
+    } catch (err) {
+      setStatoZip({ errore: err.message })
+    }
+  }
 
   return (
     <>
@@ -220,6 +239,19 @@ function Contenuto({ documenti }) {
         >
           Scarica JSON
         </button>
+        <button
+          className="btn btn-primary"
+          disabled={valide.length === 0 || (statoZip !== null && !statoZip.errore)}
+          onClick={scaricaTuttiReport}
+        >
+          Scarica tutti i report PDF ({valide.length})
+        </button>
+        {statoZip && !statoZip.errore && (
+          <span className="status-muted">
+            Generazione report {statoZip.fatti}/{statoZip.totale}... non chiudere la pagina
+          </span>
+        )}
+        {statoZip?.errore && <span className="status-error">Errore: {statoZip.errore}</span>}
       </div>
 
       <div className="risultati-kpi">
@@ -404,6 +436,7 @@ function Contenuto({ documenti }) {
                                 risposta={r}
                                 mediaConfronto={confronto ? confronto.medie : mediaTutte}
                                 nomeConfronto={confronto ? `Media ${confronto.valore}` : 'Media tutte'}
+                                onApriReport={() => onApriReport(r.id)}
                               />
                             </td>
                           </tr>
@@ -427,6 +460,20 @@ function SurveyRisultati() {
   const [accesso, setAccesso] = useState({ inCorso: false, errore: null })
   const [documenti, setDocumenti] = useState(null)
   const [erroreLettura, setErroreLettura] = useState(null)
+  const [reportId, setReportId] = useState(null)
+  const [scrollLista, setScrollLista] = useState(0)
+  const risposte = useMemo(() => (documenti ? preparaRisposte(documenti) : []), [documenti])
+  const rispostaReport = reportId ? risposte.find((r) => r.id === reportId) : null
+
+  function apriReport(id) {
+    setScrollLista(window.scrollY)
+    setReportId(id)
+  }
+
+  function chiudiReport() {
+    setReportId(null)
+    requestAnimationFrame(() => window.scrollTo(0, scrollLista))
+  }
 
   async function entra(chiave) {
     setAccesso({ inCorso: true, errore: null })
@@ -475,33 +522,39 @@ function SurveyRisultati() {
   } else if (!documenti) {
     corpo = <p className="status-muted">Caricamento risposte...</p>
   } else {
-    corpo = <Contenuto documenti={documenti} />
+    corpo = <Contenuto risposte={risposte} onApriReport={apriReport} />
   }
 
   return (
-    <div className="page">
-      <Topbar right={<NavGioco corrente="/survey-risultati" />} />
-      <div className="page-inner page-inner--wide">
-        <div className="risultati-intestazione">
-          <div>
-            <h1>Risultati survey</h1>
-            <p className="status-muted">Campagna {CAMPAGNA} · aggiornamento in tempo reale</p>
+    <>
+      {rispostaReport && (
+        <ReportPersonale risposta={rispostaReport} risposte={risposte} onChiudi={chiudiReport} />
+      )}
+      {/* Nascosta ma montata mentre il report e' aperto: al ritorno ricerca e righe aperte restano. */}
+      <div className="page" style={rispostaReport ? { display: 'none' } : undefined}>
+        <Topbar right={<NavGioco corrente="/survey-risultati" />} />
+        <div className="page-inner page-inner--wide">
+          <div className="risultati-intestazione">
+            <div>
+              <h1>Risultati survey</h1>
+              <p className="status-muted">Campagna {CAMPAGNA} · aggiornamento in tempo reale</p>
+            </div>
+            {utente && (
+              <button
+                className="btn btn-sm"
+                onClick={() => {
+                  setDocumenti(null)
+                  esci()
+                }}
+              >
+                Esci
+              </button>
+            )}
           </div>
-          {utente && (
-            <button
-              className="btn btn-sm"
-              onClick={() => {
-                setDocumenti(null)
-                esci()
-              }}
-            >
-              Esci
-            </button>
-          )}
+          {corpo}
         </div>
-        {corpo}
       </div>
-    </div>
+    </>
   )
 }
 
