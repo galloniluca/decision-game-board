@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { useAggiornaAlRitorno } from '../lib/riconnessione'
+import { gestisciErroreFirestore, useRiconnessione } from '../lib/riconnessione'
 import { KPI_BASE_DEFAULT, calcolaKpiTavolo } from '../lib/kpi'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaOrario } from '../lib/tempo'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
@@ -20,6 +20,7 @@ function Regia() {
   const [tavoli, setTavoli] = useState([])
   const [opzioniMap, setOpzioniMap] = useState({})
   const [scelteTutte, setScelteTutte] = useState([])
+  const versione = useRiconnessione()
 
   // Tavoli e matrice opzioni: caricati una volta (non cambiano durante l'evento).
   useEffect(() => {
@@ -43,7 +44,7 @@ function Regia() {
       .catch((err) => setErrore(err.message))
   }, [])
 
-  // Sessione agganciata in tempo reale.
+  // Sessione agganciata in tempo reale (ricreata al ritorno dal background).
   useEffect(() => {
     const unsub = onSnapshot(
       doc(db, 'sessione', 'corrente'),
@@ -51,10 +52,10 @@ function Regia() {
         setSessione(snap.data({ serverTimestamps: 'estimate' }))
         setCaricamento(false)
       },
-      (err) => setErrore(err.message)
+      (err) => gestisciErroreFirestore(err, setErrore)
     )
     return () => unsub()
-  }, [])
+  }, [versione])
 
   // Tutte le scelte agganciate in tempo reale (servono sia per gli invii del round attivo
   // sia per la board KPI cumulativa di tutti i tavoli).
@@ -62,22 +63,10 @@ function Regia() {
     const unsub = onSnapshot(
       collection(db, 'scelte'),
       (snap) => setScelteTutte(snap.docs.map((d) => d.data())),
-      (err) => setErrore(err.message)
+      (err) => gestisciErroreFirestore(err, setErrore)
     )
     return () => unsub()
-  }, [])
-
-  // Se il browser resta a lungo in background la connessione realtime puo' restare
-  // interrotta in silenzio: al ritorno si rilegge subito lo stato invece di aspettare
-  // che onSnapshot si riprenda da solo.
-  useAggiornaAlRitorno(() => {
-    getDoc(doc(db, 'sessione', 'corrente'))
-      .then((snap) => setSessione(snap.data({ serverTimestamps: 'estimate' })))
-      .catch(() => {})
-    getDocs(collection(db, 'scelte'))
-      .then((snap) => setScelteTutte(snap.docs.map((d) => d.data())))
-      .catch(() => {})
-  })
+  }, [versione])
 
   async function apriRound() {
     setAzioneInCorso(true)

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebaseClient'
-import { useAggiornaAlRitorno } from '../lib/riconnessione'
+import { gestisciErroreFirestore, useRiconnessione } from '../lib/riconnessione'
 import { DURATA_ROUND_MINUTI_DEFAULT, formattaMMSS, secondiRimanenti } from '../lib/tempo'
 import { KPI_BASE_DEFAULT } from '../lib/kpi'
 import { ROUND_NOMI } from '../lib/matriceUfficiale'
@@ -19,6 +19,7 @@ function Dashboard() {
   const [opzioniMap, setOpzioniMap] = useState({})
   const [scelteTutte, setScelteTutte] = useState([])
   const [, forceTick] = useState(0)
+  const versione = useRiconnessione()
 
   // Tavoli e matrice opzioni: caricati una volta (non cambiano durante l'evento).
   useEffect(() => {
@@ -42,7 +43,7 @@ function Dashboard() {
       .catch((err) => setErrore(err.message))
   }, [])
 
-  // Sessione e scelte agganciate in tempo reale.
+  // Sessione e scelte agganciate in tempo reale (ricreate al ritorno dal background).
   useEffect(() => {
     const unsubSessione = onSnapshot(
       doc(db, 'sessione', 'corrente'),
@@ -50,30 +51,18 @@ function Dashboard() {
         setSessione(snap.data({ serverTimestamps: 'estimate' }))
         setCaricamento(false)
       },
-      (err) => setErrore(err.message)
+      (err) => gestisciErroreFirestore(err, setErrore)
     )
     const unsubScelte = onSnapshot(
       collection(db, 'scelte'),
       (snap) => setScelteTutte(snap.docs.map((d) => d.data())),
-      (err) => setErrore(err.message)
+      (err) => gestisciErroreFirestore(err, setErrore)
     )
     return () => {
       unsubSessione()
       unsubScelte()
     }
-  }, [])
-
-  // Se il browser resta a lungo in background la connessione realtime puo' restare
-  // interrotta in silenzio: al ritorno si rilegge subito lo stato invece di aspettare
-  // che onSnapshot si riprenda da solo (puo' volerci molto su rete mobile).
-  useAggiornaAlRitorno(() => {
-    getDoc(doc(db, 'sessione', 'corrente'))
-      .then((snap) => setSessione(snap.data({ serverTimestamps: 'estimate' })))
-      .catch(() => {})
-    getDocs(collection(db, 'scelte'))
-      .then((snap) => setScelteTutte(snap.docs.map((d) => d.data())))
-      .catch(() => {})
-  })
+  }, [versione])
 
   // Tick ogni secondo solo per aggiornare il countdown testuale in alto.
   useEffect(() => {
