@@ -10,6 +10,7 @@ import {
   filtriAttivi,
   FILTRI_VUOTI,
   medie,
+  ordinaRisposte,
   periodoRapido,
   preparaRisposte,
   COLONNE_CSV,
@@ -125,4 +126,29 @@ test('elencoCampagne dalla più recente', () => {
     risposta('c', 'Altro', 3, { campagna: 'vecchia', creato_at: '2025-05-02T10:00:00Z' }),
   ]
   assert.deepEqual(elencoCampagne(lista), ['nuova', 'vecchia'])
+})
+
+test('ordinaRisposte per nome, azienda, data e totale', () => {
+  const r = (id, nome, azienda, data, valore) =>
+    preparaRisposte([risposta(id, 'Altro', valore, { creato_at: data, anagrafica: { nome, azienda, settore: 'Altro' } })])[0]
+  const lista = [
+    r('a', 'bruno', 'Zeta', '2026-09-29T10:00:00Z', 2),
+    r('b', 'Anna', 'alfa', '2026-09-29T12:00:00Z', 5),
+    r('c', 'Élena', 'Beta', '2026-09-29T11:00:00Z', 1),
+  ]
+  const ids = (...a) => ordinaRisposte(lista, ...a).map((x) => x.id)
+  assert.deepEqual(ids('nome', 'asc'), ['b', 'a', 'c'])
+  assert.deepEqual(ids('azienda', 'asc'), ['b', 'c', 'a'])
+  assert.deepEqual(ids('azienda', 'desc'), ['a', 'c', 'b'])
+  assert.deepEqual(ids(), ['b', 'c', 'a'])
+  assert.deepEqual(ids('data', 'asc'), ['a', 'c', 'b'])
+  assert.deepEqual(ids('totale', 'desc'), ['b', 'a', 'c'])
+})
+
+test('ordinaRisposte: a parità di valore prima la più recente', () => {
+  const lista = [
+    risposta('vecchia', 'Altro', 3, { creato_at: '2026-09-29T09:00:00Z' }),
+    risposta('nuova', 'Altro', 3, { creato_at: '2026-09-29T15:00:00Z' }),
+  ]
+  assert.deepEqual(ordinaRisposte(lista, 'settore', 'asc').map((x) => x.id), ['nuova', 'vecchia'])
 })

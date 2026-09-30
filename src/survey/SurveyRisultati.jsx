@@ -13,7 +13,7 @@ import {
   filtraRisposte,
   filtriAttivi,
   medie,
-  millisecondi,
+  ordinaRisposte,
   periodoRapido,
   preparaRisposte,
 } from './risultati'
@@ -243,12 +243,12 @@ function Filtri({ filtri, onCambia, campagne, trovate, totali }) {
           </select>
         </div>
         <div className="survey-campo">
-          <label htmlFor="filtro-testo">Cerca</label>
+          <label htmlFor="filtro-testo" title="Cerca in nome, azienda, email e ruolo">Cerca</label>
           <input
             id="filtro-testo"
             className="input"
             type="search"
-            placeholder="nome, azienda, email, ruolo"
+            placeholder="nome, azienda, email…"
             value={filtri.testo}
             onChange={imposta('testo')}
           />
@@ -289,6 +289,7 @@ function Contenuto({ tutte, onApriReport }) {
   const [statoZip, setStatoZip] = useState(null)
   const [selezionati, setSelezionati] = useState(() => new Set())
   const [eliminazione, setEliminazione] = useState(null)
+  const [ordine, setOrdine] = useState({ campo: 'data', verso: 'desc' })
 
   const risposte = filtraRisposte(tutte, filtri)
   const mediaTutte = medie(risposte)
@@ -300,16 +301,40 @@ function Contenuto({ tutte, onApriReport }) {
   const contatti = risposte.filter((r) => r.consenso?.contatto_bpr).length
   const incomplete = risposte.filter((r) => !r.valida).length
 
-  const visibili = [...risposte].sort(
-    (x, y) => (millisecondi(y.creato_at) ?? 0) - (millisecondi(x.creato_at) ?? 0)
-  )
-  const valide = visibili.filter((r) => r.valida)
-  // Si cancellano solo le righe selezionate ancora visibili con i filtri attuali.
-  const daEliminare = visibili.filter((r) => selezionati.has(r.id))
-  const tutteSelezionate = visibili.length > 0 && daEliminare.length === visibili.length
+  const visibili = ordinaRisposte(risposte, ordine.campo, ordine.verso)
+  // Contano solo le righe selezionate ancora visibili con i filtri attuali: se c'è una
+  // selezione, i download riguardano solo quelle, altrimenti tutte le risposte filtrate.
+  const selezionate = visibili.filter((r) => selezionati.has(r.id))
+  const tutteSelezionate = visibili.length > 0 && selezionate.length === visibili.length
+  const conSelezione = selezionate.length > 0
+  const daScaricare = conSelezione ? selezionate : visibili
+  const valide = daScaricare.filter((r) => r.valida)
 
   const oggi = new Date().toISOString().slice(0, 10)
-  const nomeBase = `survey_${filtri.campagna || 'tutte'}${filtriAttivi({ ...filtri, campagna: '' }) ? '_filtrato' : ''}_${oggi}`
+  const suffisso = conSelezione ? '_selezione' : filtriAttivi({ ...filtri, campagna: '' }) ? '_filtrato' : ''
+  const nomeBase = `survey_${filtri.campagna || 'tutte'}${suffisso}_${oggi}`
+
+  function ordinaPer(campo) {
+    setOrdine((prima) =>
+      prima.campo === campo
+        ? { campo, verso: prima.verso === 'asc' ? 'desc' : 'asc' }
+        : { campo, verso: campo === 'data' || campo === 'totale' ? 'desc' : 'asc' }
+    )
+  }
+
+  function intestazione(campo, etichetta) {
+    const attivo = ordine.campo === campo
+    return (
+      <th key={campo} aria-sort={attivo ? (ordine.verso === 'asc' ? 'ascending' : 'descending') : 'none'}>
+        <button type="button" className="risultati-ordina" onClick={() => ordinaPer(campo)}>
+          {etichetta}
+          <span className="risultati-ordina__freccia" aria-hidden="true">
+            {attivo ? (ordine.verso === 'asc' ? '▲' : '▼') : '↕'}
+          </span>
+        </button>
+      </th>
+    )
+  }
 
   function cambiaFiltri(nuovi) {
     setFiltri(nuovi)
@@ -330,15 +355,15 @@ function Contenuto({ tutte, onApriReport }) {
   }
 
   async function eliminaSelezionate() {
-    const nomi = daEliminare.map((r) => `- ${r.anagrafica?.nome ?? '?'} (${r.anagrafica?.azienda ?? ''})`)
+    const nomi = selezionate.map((r) => `- ${r.anagrafica?.nome ?? '?'} (${r.anagrafica?.azienda ?? ''})`)
     const elenco = nomi.length > 12 ? [...nomi.slice(0, 12), `... e altre ${nomi.length - 12}`] : nomi
     const ok = window.confirm(
-      `Eliminare DEFINITIVAMENTE ${daEliminare.length} risposte?\n\n${elenco.join('\n')}\n\nL'operazione non si può annullare.`
+      `Eliminare DEFINITIVAMENTE ${selezionate.length} risposte?\n\n${elenco.join('\n')}\n\nL'operazione non si può annullare.`
     )
     if (!ok) return
     setEliminazione({ inCorso: true })
     try {
-      await eliminaRisposte(daEliminare.map((r) => r.id))
+      await eliminaRisposte(selezionate.map((r) => r.id))
       setSelezionati(new Set())
       setAperto(null)
       setEliminazione(null)
@@ -376,16 +401,16 @@ function Contenuto({ tutte, onApriReport }) {
       <div className="risultati-azioni">
         <button
           className="btn"
-          disabled={visibili.length === 0}
-          onClick={() => scarica(`${nomeBase}.csv`, creaCsv(visibili), 'text/csv;charset=utf-8')}
+          disabled={daScaricare.length === 0}
+          onClick={() => scarica(`${nomeBase}.csv`, creaCsv(daScaricare), 'text/csv;charset=utf-8')}
         >
-          Scarica CSV (Excel) ({visibili.length})
+          Scarica CSV (Excel) ({daScaricare.length})
         </button>
         <button
           className="btn"
-          disabled={visibili.length === 0}
+          disabled={daScaricare.length === 0}
           onClick={() =>
-            scarica(`${nomeBase}.json`, creaJson(visibili, filtri.campagna || 'tutte'), 'application/json')
+            scarica(`${nomeBase}.json`, creaJson(daScaricare, filtri.campagna || 'tutte'), 'application/json')
           }
         >
           Scarica JSON
@@ -405,8 +430,20 @@ function Contenuto({ tutte, onApriReport }) {
         {statoZip?.errore && <span className="status-error">Errore: {statoZip.errore}</span>}
       </div>
       <p className="status-muted risultati-nota">
-        I download contengono solo le risposte che corrispondono ai filtri. Nei report PDF il confronto usa
-        sempre tutte le risposte della campagna della persona, così il report non cambia con i filtri.
+        {conSelezione ? (
+          <>
+            <strong className="risultati-nota__selezione">
+              I download contengono solo le {selezionate.length} persone selezionate nell&apos;elenco.
+            </strong>{' '}
+            <button type="button" className="btn btn-sm" onClick={() => setSelezionati(new Set())}>
+              Deseleziona tutte
+            </button>{' '}
+          </>
+        ) : (
+          'I download contengono le risposte che corrispondono ai filtri (oppure, se ne selezioni alcune nell’elenco, solo quelle). '
+        )}
+        Nei report PDF il confronto usa sempre tutte le risposte della campagna della persona, così il report
+        non cambia con filtri e selezione.
       </p>
 
       <div className="risultati-kpi">
@@ -536,15 +573,15 @@ function Contenuto({ tutte, onApriReport }) {
             <h2>Partecipanti ({visibili.length})</h2>
             <div className="risultati-selezione">
               <span className="status-muted">
-                Seleziona le risposte di prova da eliminare. Selezionate: {daEliminare.length}
+                Selezionate: {selezionate.length}. Puoi scaricarle con i pulsanti in alto o eliminarle.
               </span>
               <button
                 type="button"
                 className="btn btn-danger btn-sm"
-                disabled={daEliminare.length === 0 || eliminazione?.inCorso}
+                disabled={selezionate.length === 0 || eliminazione?.inCorso}
                 onClick={eliminaSelezionate}
               >
-                {eliminazione?.inCorso ? 'Eliminazione...' : `Elimina selezionate (${daEliminare.length})`}
+                {eliminazione?.inCorso ? 'Eliminazione...' : `Elimina selezionate (${selezionate.length})`}
               </button>
               {eliminazione?.errore && <span className="status-error">{eliminazione.errore}</span>}
             </div>
@@ -560,13 +597,13 @@ function Contenuto({ tutte, onApriReport }) {
                         onChange={selezionaTutte}
                       />
                     </th>
-                    <th>Data</th>
-                    <th>Nome</th>
-                    <th>Azienda</th>
-                    <th>Settore</th>
-                    <th>Totale</th>
+                    {intestazione('data', 'Data')}
+                    {intestazione('nome', 'Nome')}
+                    {intestazione('azienda', 'Azienda')}
+                    {intestazione('settore', 'Settore')}
+                    {intestazione('totale', 'Totale')}
                     <th>Livello</th>
-                    <th>Contatto</th>
+                    {intestazione('contatto', 'Contatto')}
                   </tr>
                 </thead>
                 <tbody>

@@ -181,3 +181,32 @@ export function elencoCampagne(risposte) {
   }
   return [...ultima].sort((x, y) => y[1] - x[1]).map(([c]) => c)
 }
+
+// ---- Ordinamento dell'elenco partecipanti (clic sull'intestazione di colonna) ----
+
+const collatore = new Intl.Collator('it', { sensitivity: 'base', numeric: true })
+
+const CHIAVI_ORDINAMENTO = {
+  data: (r) => millisecondi(r.creato_at) ?? 0,
+  nome: (r) => r.anagrafica?.nome ?? '',
+  azienda: (r) => r.anagrafica?.azienda ?? '',
+  settore: (r) => r.anagrafica?.settore ?? '',
+  totale: (r) => (r.valida ? r.punteggi.totale : -1),
+  contatto: (r) => (r.consenso?.contatto_bpr ? 1 : 0),
+}
+
+export const CAMPI_ORDINAMENTO = Object.keys(CHIAVI_ORDINAMENTO)
+
+// verso: 'asc' | 'desc'. A parità si mette prima la risposta più recente.
+export function ordinaRisposte(risposte, campo = 'data', verso = 'desc') {
+  const chiave = CHIAVI_ORDINAMENTO[campo] ?? CHIAVI_ORDINAMENTO.data
+  const segno = verso === 'asc' ? 1 : -1
+  const confronta = (x, y) => {
+    const a = chiave(x)
+    const b = chiave(y)
+    return typeof a === 'string' ? collatore.compare(a, b) : a - b
+  }
+  return [...risposte].sort(
+    (x, y) => segno * confronta(x, y) || CHIAVI_ORDINAMENTO.data(y) - CHIAVI_ORDINAMENTO.data(x)
+  )
+}

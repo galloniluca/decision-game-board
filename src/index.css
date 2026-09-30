@@ -1900,3 +1900,39 @@ label {
   cursor: pointer;
   accent-color: var(--accent-strong);
 }
+
+/* Intestazioni ordinabili dell'elenco partecipanti. */
+.risultati-ordina {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.risultati-ordina__freccia {
+  font-size: 0.75em;
+  opacity: 0.55;
+}
+
+th[aria-sort='ascending'] .risultati-ordina__freccia,
+th[aria-sort='descending'] .risultati-ordina__freccia {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.risultati-ordina:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.risultati-nota__selezione {
+  color: var(--warning);
+}
