@@ -14,7 +14,9 @@ import {
   filtriAttivi,
   medie,
   ordinaRisposte,
+  pagina,
   periodoRapido,
+  RIGHE_PER_PAGINA,
   preparaRisposte,
 } from './risultati'
 import {
@@ -299,6 +301,50 @@ function Filtri({ filtri, onCambia, campagne, aziende, trovate, totali }) {
   )
 }
 
+function Paginazione({ pag, totale, perPagina, onPerPagina, onPagina }) {
+  return (
+    <div className="risultati-paginazione">
+      <span className="status-muted">{totale ? `${pag.da}–${pag.a} di ${totale}` : 'Nessun risultato'}</span>
+      <label className="risultati-paginazione__righe">
+        Righe per pagina
+        <select className="input" value={perPagina} onChange={(e) => onPerPagina(Number(e.target.value))}>
+          {RIGHE_PER_PAGINA.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+          <option value={0}>Tutte</option>
+        </select>
+      </label>
+      {pag.pagine > 1 && (
+        <div className="risultati-paginazione__pulsanti">
+          <button type="button" className="btn btn-sm" disabled={pag.numero === 1} onClick={() => onPagina(1)} aria-label="Prima pagina">
+            «
+          </button>
+          <button type="button" className="btn btn-sm" disabled={pag.numero === 1} onClick={() => onPagina(pag.numero - 1)}>
+            ‹ Precedente
+          </button>
+          <span className="status-muted">
+            Pagina {pag.numero} di {pag.pagine}
+          </span>
+          <button type="button" className="btn btn-sm" disabled={pag.numero === pag.pagine} onClick={() => onPagina(pag.numero + 1)}>
+            Successiva ›
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            disabled={pag.numero === pag.pagine}
+            onClick={() => onPagina(pag.pagine)}
+            aria-label="Ultima pagina"
+          >
+            »
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreConfig }) {
   const campagne = useMemo(() => elencoCampagne(tutte), [tutte])
   const [filtri, setFiltri] = useState(() => ({
@@ -311,6 +357,8 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
   const [selezionati, setSelezionati] = useState(() => new Set())
   const [eliminazione, setEliminazione] = useState(null)
   const [ordine, setOrdine] = useState({ campo: 'data', verso: 'desc' })
+  const [perPagina, setPerPagina] = useState(RIGHE_PER_PAGINA[0])
+  const [numeroPagina, setNumeroPagina] = useState(1)
 
   const risposte = filtraRisposte(tutte, filtri)
   const mediaTutte = medie(risposte)
@@ -327,6 +375,8 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
   // selezione, i download riguardano solo quelle, altrimenti tutte le risposte filtrate.
   const selezionate = visibili.filter((r) => selezionati.has(r.id))
   const tutteSelezionate = visibili.length > 0 && selezionate.length === visibili.length
+  const pag = pagina(visibili, numeroPagina, perPagina)
+  const paginaSelezionata = pag.righe.length > 0 && pag.righe.every((r) => selezionati.has(r.id))
   const conSelezione = selezionate.length > 0
   const daScaricare = conSelezione ? selezionate : visibili
   const valide = daScaricare.filter((r) => r.valida)
@@ -336,6 +386,7 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
   const nomeBase = `survey_${filtri.campagna || 'tutte'}${suffisso}_${oggi}`
 
   function ordinaPer(campo) {
+    setNumeroPagina(1)
     setOrdine((prima) =>
       prima.campo === campo
         ? { campo, verso: prima.verso === 'asc' ? 'desc' : 'asc' }
@@ -360,10 +411,30 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
   function cambiaFiltri(nuovi) {
     setFiltri(nuovi)
     setAperto(null)
+    setNumeroPagina(1)
   }
 
-  function selezionaTutte() {
-    setSelezionati(tutteSelezionate ? new Set() : new Set(visibili.map((r) => r.id)))
+  function vaiAPagina(n, scorri = false) {
+    setNumeroPagina(n)
+    setAperto(null)
+    if (scorri) document.getElementById('partecipanti')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function cambiaPerPagina(n) {
+    setPerPagina(n)
+    setNumeroPagina(1)
+  }
+
+  // La casella in intestazione agisce sulla pagina mostrata; "Seleziona tutte" su tutte le pagine.
+  function selezionaPagina() {
+    setSelezionati((prima) => {
+      const dopo = new Set(prima)
+      for (const r of pag.righe) {
+        if (paginaSelezionata) dopo.delete(r.id)
+        else dopo.add(r.id)
+      }
+      return dopo
+    })
   }
 
   function commuta(id) {
@@ -608,6 +679,20 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
               <span className="status-muted">
                 Selezionate: {selezionate.length}. Puoi scaricarle con i pulsanti in alto o eliminarle.
               </span>
+              {pag.pagine > 1 && !tutteSelezionate && (
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setSelezionati(new Set(visibili.map((r) => r.id)))}
+                >
+                  Seleziona tutte le {visibili.length}
+                </button>
+              )}
+              {selezionate.length > 0 && (
+                <button type="button" className="btn btn-sm" onClick={() => setSelezionati(new Set())}>
+                  Deseleziona tutte
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-danger btn-sm"
@@ -618,6 +703,13 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
               </button>
               {eliminazione?.errore && <span className="status-error">{eliminazione.errore}</span>}
             </div>
+            <Paginazione
+              pag={pag}
+              totale={visibili.length}
+              perPagina={perPagina}
+              onPerPagina={cambiaPerPagina}
+              onPagina={(n) => vaiAPagina(n)}
+            />
             <div className="risultati-scroll">
               <table className="table risultati-partecipanti">
                 <thead>
@@ -625,9 +717,9 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
                     <th className="risultati-spunta">
                       <input
                         type="checkbox"
-                        aria-label="Seleziona tutte le risposte visibili"
-                        checked={tutteSelezionate}
-                        onChange={selezionaTutte}
+                        aria-label="Seleziona le righe di questa pagina"
+                        checked={paginaSelezionata}
+                        onChange={selezionaPagina}
                       />
                     </th>
                     {intestazione('data', 'Data')}
@@ -640,7 +732,7 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
                   </tr>
                 </thead>
                 <tbody>
-                  {visibili.map((r) => {
+                  {pag.righe.map((r) => {
                     const espanso = aperto === r.id
                     const gruppo = perSettore.find((g) => g.valore === r.anagrafica?.settore)
                     const confronto = gruppo?.medie && gruppo.n > 1 ? gruppo : null
@@ -697,7 +789,19 @@ function Contenuto({ tutte, onApriReport, gruppiAziende, configAziende, erroreCo
                 </tbody>
               </table>
             </div>
-            {visibili.length === 0 && <p className="status-muted">Nessun partecipante corrisponde.</p>}
+            {visibili.length === 0 ? (
+              <p className="status-muted">Nessun partecipante corrisponde.</p>
+            ) : (
+              pag.pagine > 1 && (
+                <Paginazione
+                  pag={pag}
+                  totale={visibili.length}
+                  perPagina={perPagina}
+                  onPerPagina={cambiaPerPagina}
+                  onPagina={(n) => vaiAPagina(n, true)}
+                />
+              )
+            )}
           </section>
         </>
       )}

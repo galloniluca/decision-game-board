@@ -617,6 +617,7 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
     segnare come diversi. Unioni, nomi scelti e coppie diverse sono salvati in
     `survey_config/aziende` (leggibile e scrivibile solo dall'utente riservato) e valgono per filtro
     Azienda, ordinamento e colonna `azienda_raggruppata` del CSV
+  - elenco partecipanti a pagine (20, 50, 100 righe o tutte), ordinabile cliccando sulle colonne
   - **eliminazione** delle risposte selezionate (prove, richieste di cancellazione), con conferma:
     è definitiva. Richiede la versione di `firestore.rules` che permette `delete` all'utente riservato
 - I punteggi sono sempre **ricalcolati dalle risposte** (`src/survey/risultati.js`, con test)
@@ -642,7 +643,7 @@ e per scaricare i dati. Raggiungibile dalla barra di link di Home, Config, Regia
 
 ### Test
 
-- Automatici: `npm test` (54 test, compresi aggregazioni, filtri, report ed export CSV/JSON) e
+- Automatici: `npm test` (55 test, compresi aggregazioni, filtri, report ed export CSV/JSON) e
   `npm run test:rules` (44 test: l'utente riservato può leggere e cancellare ma non modificare; un
   altro utente autenticato, lo stesso indirizzo con accesso Google o un visitatore anonimo non
   possono leggere; il game resta aperto)

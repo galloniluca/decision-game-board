@@ -2002,3 +2002,34 @@ th[aria-sort='descending'] .risultati-ordina__freccia {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Paginazione dell'elenco partecipanti. */
+.risultati-paginazione {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.risultati-paginazione__righe {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.risultati-paginazione__righe .input {
+  width: auto;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.risultati-paginazione__pulsanti {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}

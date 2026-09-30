@@ -11,6 +11,7 @@ import {
   FILTRI_VUOTI,
   medie,
   ordinaRisposte,
+  pagina,
   periodoRapido,
   preparaRisposte,
   COLONNE_CSV,
@@ -166,4 +167,16 @@ test('filtro e ricerca per azienda raggruppata; CSV e JSON con il nome raggruppa
   const doc = JSON.parse(creaJson(lista.slice(0, 1), 'c')).documenti[0]
   assert.equal(doc.azienda_raggruppata, 'Rossi SpA')
   assert.equal('aziendaChiave' in doc, false)
+})
+
+test('paginazione: pagine, limiti e "tutte"', () => {
+  const lista = Array.from({ length: 45 }, (_, i) => i + 1)
+  const p2 = pagina(lista, 2, 20)
+  assert.deepEqual([p2.numero, p2.pagine, p2.da, p2.a, p2.righe[0]], [2, 3, 21, 40, 21])
+  const p3 = pagina(lista, 3, 20)
+  assert.deepEqual([p3.da, p3.a, p3.righe.length], [41, 45, 5])
+  assert.equal(pagina(lista, 9, 20).numero, 3)
+  assert.equal(pagina(lista, 0, 20).numero, 1)
+  assert.deepEqual([pagina(lista, 4, 0).righe.length, pagina(lista, 4, 0).pagine], [45, 1])
+  assert.deepEqual(pagina([], 1, 20), { righe: [], numero: 1, pagine: 1, da: 0, a: 0 })
 })

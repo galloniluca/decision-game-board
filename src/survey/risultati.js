@@ -216,3 +216,20 @@ export function ordinaRisposte(risposte, campo = 'data', verso = 'desc') {
     (x, y) => segno * confronta(x, y) || CHIAVI_ORDINAMENTO.data(y) - CHIAVI_ORDINAMENTO.data(x)
   )
 }
+
+// ---- Paginazione dell'elenco partecipanti ----
+
+export const RIGHE_PER_PAGINA = [20, 50, 100]
+
+// perPagina 0 = tutte. La pagina richiesta viene riportata nei limiti (es. dopo una cancellazione).
+export function pagina(lista, numero, perPagina) {
+  const totale = lista.length
+  if (!perPagina || perPagina <= 0) {
+    return { righe: lista, numero: 1, pagine: 1, da: totale ? 1 : 0, a: totale }
+  }
+  const pagine = Math.max(1, Math.ceil(totale / perPagina))
+  const n = Math.min(Math.max(1, numero), pagine)
+  const inizio = (n - 1) * perPagina
+  const righe = lista.slice(inizio, inizio + perPagina)
+  return { righe, numero: n, pagine, da: righe.length ? inizio + 1 : 0, a: inizio + righe.length }
+}
